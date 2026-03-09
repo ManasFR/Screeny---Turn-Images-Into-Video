@@ -1,0 +1,18 @@
+-- AlterTable
+ALTER TABLE `plan` ADD COLUMN `features` JSON NULL,
+    ADD COLUMN `noWatermark` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `videos` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `watermark` INTEGER NOT NULL DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE `user` ADD COLUMN `plan_id` INTEGER NOT NULL DEFAULT 0;
+
+-- CreateTable
+CREATE TABLE `videoexports` (
+    `id` VARCHAR(191) NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `planId` INTEGER NOT NULL,
+    `exportedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

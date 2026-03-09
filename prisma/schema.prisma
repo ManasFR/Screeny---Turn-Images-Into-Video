@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String? @db.Text
+  user              user    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Account_userId_fkey")
+
+  @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
+  @@index([userId], map: "Account_userId_idx")
+}
+
+model admins {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique(map: "Admins_email_key")
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model license {
+  id           Int    @id @default(autoincrement())
+  name         String
+  licenseCodes Json
+  status       String
+  plan         plan[]
+}
+
+model plan {
+  id          Int    @id @default(autoincrement())
+  planName    String
+  retailPrice Float
+  salePrice   Float
+  license_id  Int
+  videos      Int    @default(0)
+  watermark   Int    @default(0)
+  noWatermark Int    @default(0)
+  features    Json?
+
+  license license @relation(fields: [license_id], references: [id])
+
+  @@index([license_id])
+}
+
+model session {
+  id           String   @id
+  sessionToken String   @unique(map: "Session_sessionToken_key")
+  userId       String
+  expires      DateTime
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Session_userId_fkey")
+
+  @@index([userId], map: "Session_userId_idx")
+}
+
+model user {
+  id            String    @id
+  name          String?
+  email         String    @unique(map: "User_email_key")
+  image         String?   @db.Text
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime
+  plan_id       Int       @default(0)
+  account       account[]
+  session       session[]
+}
+
+model verificationtoken {
+  identifier String
+  token      String   @unique(map: "VerificationToken_token_key")
+  expires    DateTime
+
+  @@unique([identifier, token], map: "VerificationToken_identifier_token_key")
+}
+
+// schema.prisma
+model VideoExports {
+  id         String   @id @default(cuid())
+  userId     String
+  planId     Int
+  exportedAt DateTime @default(now())
+
+  @@map("videoexports") // Keeps DB table lowercase
+}
