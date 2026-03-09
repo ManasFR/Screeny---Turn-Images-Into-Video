@@ -82,7 +82,7 @@ export default function Home() {
       <div className="fixed top-[-20%] left-1/2 -translate-x-1/2 w-[80vw] h-[60vh] bg-indigo-600/15 blur-[120px] rounded-full pointer-events-none z-0 animate-pulse duration-[10000ms]"></div>
       <div className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vh] bg-purple-600/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
 
-      {/* Floating Header */}
+{/* Floating Header */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'py-4' : 'py-6'}`}>
         <div className="max-w-7xl mx-auto px-6">
           <div className={`flex justify-between items-center transition-all duration-500 rounded-full px-6 py-3 ${isScrolled ? 'bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]' : 'bg-transparent'}`}>
@@ -101,9 +101,16 @@ export default function Home() {
               ))}
             </nav>
             <div className="flex items-center gap-4">
-              {!session && <button onClick={handleGetStarted} className="hidden md:block text-sm font-medium text-white/70 hover:text-white transition-colors">Log in</button>}
+              {!session && (
+                <button
+                  onClick={() => router.push('/user/login')}
+                  className="hidden md:block text-sm font-medium text-white/70 hover:text-white transition-colors"
+                >
+                  Log in
+                </button>
+              )}
               <button
-                onClick={handleGetStarted}
+                onClick={() => session ? router.push('/dashboard/duprun') : router.push('/user/register')}
                 className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-indigo-50 transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
               >
                 {session ? 'Dashboard' : 'Get Started'}
