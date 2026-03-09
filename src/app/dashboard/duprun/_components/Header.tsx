@@ -13,7 +13,7 @@ const Header = () => {
   };
 
   return (
-    <header className="border-b border-white/[0.05] pb-5 mb-10">
+    <header className="border-b border-white/[0.05] pt-6 pb-5 mb-10 px-6">
       <div className="max-w-full mx-auto flex justify-between items-center">
 
         {/* Logo */}

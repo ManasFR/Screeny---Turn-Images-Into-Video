@@ -96,7 +96,7 @@ export default function RegisterPage() {
 
       if (result?.ok) {
         // Registration successful, redirect to dashboard
-        router.push('/dashboard/Screeny');
+        router.push('/dashboard/duprun');
       }
       
     } catch (error) {

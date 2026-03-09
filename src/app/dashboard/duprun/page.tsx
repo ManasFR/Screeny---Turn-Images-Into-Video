@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Sparkles, Layout } from 'lucide-react';
 
 // Hooks
 import { usePlanLimits } from '@/hooks/usePlanLimits';
@@ -231,38 +232,49 @@ const ZoomVideoApp = () => {
   const totalZoomPoints = slides.reduce((sum, s) => sum + s.zoomPoints.length, 0);
 
   return (
-    <div className="min-h-screen bg-black p-4 font-[Poppins] text-white">
-      <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-      />
-
+    <div className="min-h-screen bg-[#050505] text-white selection:bg-indigo-500/30">
+      {/* Dynamic Background Glow */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
+      </div>
       <Header />
-
-      <div className="max-w-full mx-auto">
-        {/* Hero text */}
-        <div className="text-center mb-10">
-          <h2 className="text-5xl font-bold tracking-tight mb-2">
-            Turn your plain screenshots into eye-catching videos.
-          </h2>
+      <main className="max-w-[1600px] mx-auto px-6 pb-20 relative z-10">
+        {/* Hero Section */}
+        <div className="flex flex-col items-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Next Gen Production</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-center max-w-3xl leading-tight tracking-tighter italic uppercase">
+            Transform Static Frames <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
+              into Cinematic Motion
+            </span>
+          </h1>
+          
           {planLimits && (
-            <div className="mt-4 inline-block bg-gray-900 px-6 py-3 rounded-2xl border border-gray-800">
-              <p className="text-sm text-gray-300">
-                {planLimits.planName && (
-                  <span className="font-semibold text-white">{planLimits.planName}</span>
-                )}
-              </p>
+            <div className="mt-6 flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                Active Tier: <span className="text-white ml-1">{planLimits.planName || 'Free'}</span>
+              </span>
             </div>
           )}
         </div>
 
-        {/* Export limit error */}
         {showLimitError && <LimitErrorBanner planLimits={planLimits} />}
 
-        {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* ── Left sidebar ─────────────────────────────────────── */}
-          <div className="col-span-1 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* ── Sidebar: Config & Tools (4 cols) ────────────────────── */}
+          <div className="lg:col-span-4 space-y-6 max-h-[calc(100vh-12rem)] overflow-y-auto custom-scrollbar pr-2">
+            
+            {/* Section Label */}
+            <div className="flex items-center gap-2 mb-2">
+              <Layout className="w-4 h-4 text-indigo-500" />
+              <h2 className="text-xs font-black uppercase tracking-widest text-gray-500">Studio Configuration</h2>
+            </div>
+
             <AnimationSettings
               zoomLevel={zoomLevel}
               setZoomLevel={setZoomLevel}
@@ -298,51 +310,55 @@ const ZoomVideoApp = () => {
               onCustomImageUpload={handleCustomBackgroundUpload}
             />
 
-            {/* Controls card */}
-            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 shadow-2xl">
-              <h2 className="text-xl font-bold text-white mb-4">Controls</h2>
-
-              <SlideManager
-                slides={slides}
-                currentSlideIndex={currentSlideIndex}
-                onAddSlide={addSlide}
-                onRemoveSlide={removeSlide}
-                onSelectSlide={setCurrentSlideIndex}
-                onAddMusic={addSlideMusic}
-                currentSlide={currentSlide}
-              />
+            {/* Media & Playback Card */}
+            <div className="bg-[#0f111a] rounded-[2rem] p-6 border border-white/10 shadow-2xl space-y-8">
+              <div>
+                <SlideManager
+                  slides={slides}
+                  currentSlideIndex={currentSlideIndex}
+                  onAddSlide={addSlide}
+                  onRemoveSlide={removeSlide}
+                  onSelectSlide={setCurrentSlideIndex}
+                  onAddMusic={addSlideMusic}
+                  currentSlide={currentSlide}
+                />
+              </div>
 
               {currentSlide && (
-                <ZoomPointManager
-                  currentSlide={currentSlide}
-                  onUpdateText={updatePointText}
-                  onRemovePoint={removeZoomPoint}
-                  onClearAll={(slideId) => {
-                    clearAllPoints(slideId);
-                    resetAnimation();
-                  }}
-                />
+                <div className="pt-6 border-t border-white/5">
+                  <ZoomPointManager
+                    currentSlide={currentSlide}
+                    onUpdateText={updatePointText}
+                    onRemovePoint={removeZoomPoint}
+                    onClearAll={(slideId) => {
+                      clearAllPoints(slideId);
+                      resetAnimation();
+                    }}
+                  />
+                </div>
               )}
 
-              <PlaybackControls
-                isPlaying={isPlaying}
-                isRecording={isRecording}
-                totalZoomPoints={totalZoomPoints}
-                planLimits={planLimits}
-                currentSlideIndex={currentSlideIndex}
-                slidesCount={slides.length}
-                progress={progress}
-                totalDuration={getTotalAnimationTime()}
-                onPlay={startAnimation}
-                onStop={stopAnimation}
-                onReset={resetAnimation}
-                onExport={createAndDownloadVideo}
-              />
+              <div className="pt-6 border-t border-white/5">
+                <PlaybackControls
+                  isPlaying={isPlaying}
+                  isRecording={isRecording}
+                  totalZoomPoints={totalZoomPoints}
+                  planLimits={planLimits}
+                  currentSlideIndex={currentSlideIndex}
+                  slidesCount={slides.length}
+                  progress={progress}
+                  totalDuration={getTotalAnimationTime()}
+                  onPlay={startAnimation}
+                  onStop={stopAnimation}
+                  onReset={resetAnimation}
+                  onExport={createAndDownloadVideo}
+                />
+              </div>
             </div>
           </div>
 
-          {/* ── Canvas editor ─────────────────────────────────────── */}
-          <div className="col-span-3 sticky top-0 h-[calc(100vh-2rem)] overflow-hidden">
+          {/* ── Center: Canvas Studio (8 cols) ─────────────────────── */}
+          <div className="lg:col-span-8 sticky top-6">
             <CanvasEditor
               canvasRef={canvasRef}
               slides={slides}
@@ -357,9 +373,43 @@ const ZoomVideoApp = () => {
               onPointMouseDown={handlePointMouseDown}
               onNavigate={navigateSlide}
             />
+            
+            <div className="mt-6 flex justify-between items-center px-4 py-3 bg-white/5 border border-white/5 rounded-2xl">
+               <div className="flex gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Resolution</span>
+                    <span className="text-xs font-mono">1440 x 810 (16:9)</span>
+                  </div>
+                  <div className="w-px h-8 bg-white/10" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Total Points</span>
+                    <span className="text-xs font-mono">{totalZoomPoints} Markers</span>
+                  </div>
+               </div>
+               <div className="text-[10px] text-indigo-400 font-black tracking-widest bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">
+                  LIVE STUDIO PREVIEW
+               </div>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+      
+      {/* Styles for the custom scrollbar */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(99, 102, 241, 0.4);
+        }
+      `}</style>
     </div>
   );
 };

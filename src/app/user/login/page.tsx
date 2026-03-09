@@ -20,7 +20,7 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/dashboard/Screeny" });
+      await signIn("google", { callbackUrl: "/dashboard/duprun" });
     } catch (error) {
       console.error('Sign in error:', error);
       setIsLoading(false);
@@ -81,7 +81,7 @@ export default function LoginPage() {
 
       if (result?.ok) {
         // Login successful, redirect to dashboard
-        router.push('/dashboard/Screeny');
+        router.push('/dashboard/duprun');
       }
       
     } catch (error) {
