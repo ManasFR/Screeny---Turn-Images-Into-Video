@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Plus_Jakarta_Sans } from 'next/font/google';
-import LicenseValidate from "./license_validate";
+
 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'],
@@ -32,8 +32,6 @@ interface Plan {
 export default function Home() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [error, setError] = useState<string>('');
   const [isScrolled, setIsScrolled] = useState(false);
@@ -69,13 +67,12 @@ export default function Home() {
     router.push('/user/register');
   };
 
-  const handleSelectPlan = (plan: Plan) => {
+  const handleSelectPlan = () => {
     if (!session) {
-      router.push('/user/register');
+      router.push('/user/login');
       return;
     }
-    setSelectedPlan(plan);
-    setShowModal(true);
+    router.push('/plans');
   };
 
   return (
@@ -382,7 +379,7 @@ export default function Home() {
                     </div>
 
                     <button
-                      onClick={() => handleSelectPlan(plan)}
+                    onClick={() => handleSelectPlan()}
                       className={`w-full py-5 rounded-2xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 group ${isPopular ? 'bg-white text-black hover:bg-gray-200 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]' : 'bg-white/10 text-white hover:bg-white/20'}`}
                     >
                       Choose {plan.planName}
@@ -479,11 +476,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      {/* Modal Validation logic preserved - explicitly passing onClose to fix your original code! */}
-      {showModal && selectedPlan && (
-        <LicenseValidate plan={selectedPlan} onClose={() => setShowModal(false)} />
-      )}
     </div>
   );
 }
