@@ -10,7 +10,7 @@ export interface DeviceConfig {
   scale?: number;
 }
 
-export const DEVICE_SIZES: Record<DeviceSize, DeviceConfig> = {
+export const SS_DEVICE_SIZES: Record<DeviceSize, DeviceConfig> = {
   mobile: {
     label: "Mobile",
     width: 390,
@@ -41,7 +41,7 @@ export const DEVICE_SIZES: Record<DeviceSize, DeviceConfig> = {
   },
 };
 
-export interface ScreenshotState {
+export interface SSScreenshotState {
   url: string;
   selectedSize: DeviceSize;
   isLoading: boolean;
@@ -51,8 +51,8 @@ export interface ScreenshotState {
   previewLoaded: boolean;
 }
 
-export function useScreenshot() {
-  const [state, setState] = useState<ScreenshotState>({
+export function useSSScreenshot() {
+  const [state, setState] = useState<SSScreenshotState>({
     url: "",
     selectedSize: "laptop",
     isLoading: false,
@@ -103,11 +103,9 @@ export function useScreenshot() {
       setState((prev) => ({ ...prev, error: "Please enter a valid URL" }));
       return;
     }
-
     setState((prev) => ({ ...prev, isCapturing: true, error: null }));
-
     try {
-      const device = DEVICE_SIZES[state.selectedSize];
+      const device = SS_DEVICE_SIZES[state.selectedSize];
       const response = await fetch("/api/screenshot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,12 +116,10 @@ export function useScreenshot() {
           deviceSize: state.selectedSize,
         }),
       });
-
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.error || `Request failed: ${response.status}`);
       }
-
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       setState((prev) => ({ ...prev, screenshotUrl: objectUrl, isCapturing: false }));
@@ -184,6 +180,6 @@ export function useScreenshot() {
     reset,
     onPreviewLoad,
     onPreviewError,
-    deviceConfig: DEVICE_SIZES[state.selectedSize],
+    deviceConfig: SS_DEVICE_SIZES[state.selectedSize],
   };
 }

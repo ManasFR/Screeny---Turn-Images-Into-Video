@@ -3,44 +3,39 @@
 import { KeyboardEvent } from "react";
 import { Search, X, Globe } from "lucide-react";
 
-interface UrlInputProps {
+interface SSUrlInputProps {
   value: string;
   onChange: (url: string) => void;
   onLoad: () => void;
   isLoading: boolean;
 }
 
-export default function UrlInput({ value, onChange, onLoad, isLoading }: UrlInputProps) {
+export default function SSUrlInput({ value, onChange, onLoad, isLoading }: SSUrlInputProps) {
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") onLoad();
   };
 
   return (
     <div className="flex items-center gap-3 w-full">
-      {/* URL Bar */}
-      <div className="flex-1 flex items-center gap-3 bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl px-4 h-12 focus-within:border-[#6ee7b7] transition-colors group">
-        <Globe className="w-4 h-4 text-[#555] group-focus-within:text-[#6ee7b7] transition-colors shrink-0" />
+      <div className="flex-1 flex items-center gap-3 bg-[#161616] border border-[#333] rounded-xl px-4 h-12 focus-within:border-[#6ee7b7] transition-colors group">
+        <Globe className="w-4 h-4 text-[#777] group-focus-within:text-[#6ee7b7] transition-colors shrink-0" />
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Enter URL — e.g. github.com"
-          className="flex-1 bg-transparent text-sm text-[#e0e0e0] placeholder-[#444] outline-none font-mono"
+          className="flex-1 bg-transparent text-sm text-[#eee] placeholder-[#555] outline-none font-mono"
           spellCheck={false}
           autoComplete="off"
         />
         {value && (
-          <button
-            onClick={() => onChange("")}
-            className="text-[#555] hover:text-[#aaa] transition-colors"
-          >
+          <button onClick={() => onChange("")} className="text-[#777] hover:text-[#aaa] transition-colors">
             <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
 
-      {/* Load Button */}
       <button
         onClick={onLoad}
         disabled={!value.trim() || isLoading}

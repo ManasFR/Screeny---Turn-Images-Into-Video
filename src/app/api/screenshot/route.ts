@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    // Validate URL
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(url);
@@ -20,13 +19,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Only HTTP/HTTPS URLs allowed" }, { status: 400 });
     }
 
-    // Dynamically import puppeteer (install: npm install puppeteer)
     const puppeteer = await import("puppeteer").catch(() => null);
     if (!puppeteer) {
-      return NextResponse.json(
-        { error: "Puppeteer not installed. Run: npm install puppeteer" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Puppeteer not installed. Run: npm install puppeteer" }, { status: 500 });
     }
 
     const isMobile = deviceSize === "mobile";
@@ -34,17 +29,11 @@ export async function POST(req: NextRequest) {
 
     const browser = await puppeteer.default.launch({
       headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
     });
 
     const page = await browser.newPage();
 
-    // Set viewport
     await page.setViewport({
       width: width || 1280,
       height: height || 800,
@@ -53,28 +42,20 @@ export async function POST(req: NextRequest) {
       hasTouch: isMobile || isTablet,
     });
 
-    // Set user agent based on device
     const userAgents: Record<string, string> = {
-      mobile:
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-      tablet:
-        "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-      laptop:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      desktop:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      mobile: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      tablet: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      laptop: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      desktop: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     };
 
     if (deviceSize && userAgents[deviceSize]) {
       await page.setUserAgent(userAgents[deviceSize]);
     }
 
-    await page.goto(url, {
-      waitUntil: "networkidle2",
-      timeout: 30000,
-    });
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
 
-    // Auto-scroll to trigger lazy-loaded images/content
+    // Auto-scroll to trigger lazy-loaded content
     await page.evaluate(async () => {
       await new Promise<void>((resolve) => {
         let totalHeight = 0;
@@ -84,21 +65,17 @@ export async function POST(req: NextRequest) {
           totalHeight += distance;
           if (totalHeight >= document.body.scrollHeight) {
             clearInterval(timer);
-            window.scrollTo(0, 0); // scroll back to top
+            window.scrollTo(0, 0);
             resolve();
           }
         }, 80);
       });
     });
 
-    // Wait for lazy-loaded content to render after scroll
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    // Full page screenshot — captures entire scrollable page
-    const screenshot = await page.screenshot({
-      type: "png",
-      fullPage: true,
-    });
+    // Full page screenshot
+    const screenshot = await page.screenshot({ type: "png", fullPage: true });
 
     await browser.close();
 

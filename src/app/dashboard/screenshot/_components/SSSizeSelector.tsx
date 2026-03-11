@@ -1,9 +1,9 @@
 "use client";
 
 import { Smartphone, Tablet, Laptop, Monitor } from "lucide-react";
-import { DeviceSize, DEVICE_SIZES } from "@/hooks/useScreenshot";
+import { DeviceSize, SS_DEVICE_SIZES } from "@/hooks/useSSScreenshot";
 
-interface SizeSelectorProps {
+interface SSSizeSelectorProps {
   selected: DeviceSize;
   onChange: (size: DeviceSize) => void;
 }
@@ -15,14 +15,14 @@ const ICONS = {
   desktop: Monitor,
 };
 
-export default function SizeSelector({ selected, onChange }: SizeSelectorProps) {
+export default function SSSizeSelector({ selected, onChange }: SSSizeSelectorProps) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-[#555] font-mono mr-1 shrink-0">VIEWPORT</span>
+      <span className="text-xs text-[#777] font-mono mr-1 shrink-0">VIEWPORT</span>
       <div className="flex gap-1.5">
-        {(Object.keys(DEVICE_SIZES) as DeviceSize[]).map((size) => {
+        {(Object.keys(SS_DEVICE_SIZES) as DeviceSize[]).map((size) => {
           const Icon = ICONS[size];
-          const config = DEVICE_SIZES[size];
+          const config = SS_DEVICE_SIZES[size];
           const isActive = selected === size;
 
           return (
@@ -35,15 +35,13 @@ export default function SizeSelector({ selected, onChange }: SizeSelectorProps) 
                 ${
                   isActive
                     ? "bg-[#6ee7b7]/15 text-[#6ee7b7] border border-[#6ee7b7]/40"
-                    : "bg-[#0f0f0f] text-[#666] border border-[#222] hover:border-[#444] hover:text-[#aaa]"
+                    : "bg-[#161616] text-[#888] border border-[#2e2e2e] hover:border-[#444] hover:text-[#aaa]"
                 }
               `}
             >
               <Icon className="w-3.5 h-3.5" />
               <span className="hidden sm:block">{config.label}</span>
-              <span
-                className={`hidden lg:block text-[10px] font-mono ${isActive ? "text-[#6ee7b7]/60" : "text-[#444]"}`}
-              >
+              <span className={`hidden lg:block text-[10px] font-mono ${isActive ? "text-[#6ee7b7]/60" : "text-[#555]"}`}>
                 {config.width}w
               </span>
             </button>
