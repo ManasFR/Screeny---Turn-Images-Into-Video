@@ -51,7 +51,7 @@ const CanvasOverlay = ({
   }, [canvasRef]);
 
   return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: tool === 'none' ? 'none' : 'all' }}>
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: tool === 'none' ? 'none' : 'all', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <canvas
         ref={canvasRef}
         onMouseDown={onMouseDown}
@@ -71,11 +71,18 @@ const CanvasOverlay = ({
         <div style={{
           position: 'absolute',
           left: textPos.x,
-          top: textPos.y - 36,
+          top: textPos.y - 40,
           zIndex: 10,
           display: 'flex',
-          gap: '6px',
+          gap: '8px',
           alignItems: 'center',
+          background: 'rgba(9,9,11,0.85)',
+          padding: '4px',
+          borderRadius: '10px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(99,102,241,0.4)',
+          transform: 'translateY(-10px)',
         }}>
           <input
             autoFocus
@@ -85,28 +92,27 @@ const CanvasOverlay = ({
             onKeyDown={e => { if (e.key === 'Enter') onTextCommit(); if (e.key === 'Escape') onTextCommit(); }}
             placeholder="Type here…"
             style={{
-              padding: '6px 10px',
-              borderRadius: '8px',
-              background: 'rgba(0,0,0,0.85)',
-              border: '1.5px solid rgba(99,102,241,0.6)',
-              color: '#fff',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              background: 'transparent',
+              border: 'none',
+              color: '#ffffff',
               fontSize: '13px',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontWeight: 500,
               outline: 'none',
-              minWidth: '140px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+              minWidth: '160px',
             }}
           />
           <button
             onClick={onTextCommit}
             style={{
-              padding: '6px 12px', borderRadius: '8px',
-              background: 'rgba(99,102,241,0.8)',
-              border: 'none', color: '#fff',
-              fontSize: '11px', fontWeight: 700,
+              padding: '8px 14px', borderRadius: '6px',
+              background: '#6366f1',
+              border: 'none', color: '#ffffff',
+              fontSize: '12px', fontWeight: 600,
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              cursor: 'pointer',
+              cursor: 'pointer', transition: 'background 0.2s ease',
             }}
           >
             Add

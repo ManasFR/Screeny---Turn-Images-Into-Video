@@ -26,8 +26,8 @@ const TOOLS: { type: WBTool; icon: any; label: string }[] = [
 ];
 
 const COLORS = [
-  '#111111','#e74c3c','#e67e22','#f1c40f',
-  '#2ecc71','#3498db','#9b59b6','#e91e63','#ffffff',
+  '#09090b','#ef4444','#f97316','#eab308',
+  '#10b981','#3b82f6','#8b5cf6','#ec4899','#ffffff',
 ];
 
 const drawArrow = (ctx: CanvasRenderingContext2D, from: Point, to: Point) => {
@@ -67,7 +67,7 @@ const renderObj = (ctx: CanvasRenderingContext2D, obj: WBObj) => {
   } else if (obj.type === 'arrow' && obj.start && obj.end) {
     drawArrow(ctx, obj.start, obj.end);
   } else if (obj.type === 'text' && obj.text && obj.x !== undefined && obj.y !== undefined) {
-    ctx.font = `${Math.max(16, obj.size * 5)}px "Segoe UI", sans-serif`;
+    ctx.font = `${Math.max(16, obj.size * 5)}px "Plus Jakarta Sans", sans-serif`;
     ctx.fillText(obj.text, obj.x, obj.y);
   }
   ctx.restore();
@@ -78,7 +78,7 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [tool, setTool] = useState<WBTool>('pen');
-  const [color, setColor] = useState('#111111');
+  const [color, setColor] = useState('#09090b');
   const [size, setSize] = useState(3);
   const [objs, setObjs] = useState<WBObj[]>([]);
   const [redoStack, setRedoStack] = useState<WBObj[][]>([]);
@@ -90,7 +90,6 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
   const [textVal, setTextVal] = useState('');
   const textRef = useRef<HTMLInputElement>(null);
 
-  // ── Redraw
   const redraw = useCallback((list: WBObj[], cur: WBObj | null = null) => {
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d'); if (!ctx) return;
@@ -102,7 +101,6 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
 
   useEffect(() => { redraw(objs, current); }, [objs, current, redraw]);
 
-  // ── Resize
   useEffect(() => {
     const el = containerRef.current; const canvas = canvasRef.current;
     if (!el || !canvas) return;
@@ -114,7 +112,7 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
     redraw(objs);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [redraw, objs]); // added deps for complete safety
 
   const getPos = (e: MouseEvent<HTMLCanvasElement>): Point => {
     const r = canvasRef.current!.getBoundingClientRect();
@@ -165,7 +163,6 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
     a.href = canvas.toDataURL('image/png'); a.click();
   };
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && !showText) onClose(); };
     window.addEventListener('keydown', handler);
@@ -176,119 +173,115 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
       display: 'flex', flexDirection: 'column',
-      background: '#ffffff',
+      background: '#f8fafc',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
-      {/* ── Toolbar ── */}
+      {/* ── Sleek Light Theme Toolbar ── */}
       <div style={{
-        height: '46px', flexShrink: 0,
-        background: 'linear-gradient(180deg,#f4f4f4,#ebebeb)',
-        borderBottom: '1px solid #d0d0d0',
-        display: 'flex', alignItems: 'center', gap: '6px',
-        padding: '0 12px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+        height: '60px', flexShrink: 0,
+        background: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
+        display: 'flex', alignItems: 'center', gap: '8px',
+        padding: '0 20px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '10px' }}>
-          <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Pen style={{ width: '12px', height: '12px', color: '#fff' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: '16px' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(99,102,241,0.3)' }}>
+            <Pen style={{ width: '16px', height: '16px', color: '#fff' }} />
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: '#333' }}>Whiteboard</span>
+          <span style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.01em' }}>Whiteboard</span>
         </div>
 
-        <div style={{ width: '1px', height: '26px', background: '#ccc', marginRight: '4px' }} />
+        <div style={{ width: '1px', height: '32px', background: '#e2e8f0', marginRight: '8px' }} />
 
         {/* Drawing tools */}
         {TOOLS.map(({ type: t, icon: Icon, label }) => (
           <button key={t} onClick={() => { setTool(t); setShowText(false); }} title={label}
             style={{
-              display: 'flex', alignItems: 'center', gap: '4px',
-              padding: '5px 8px', borderRadius: '5px', cursor: 'pointer',
-              background: tool === t ? '#6366f1' : 'rgba(0,0,0,0.05)',
-              border: `1px solid ${tool === t ? '#6366f1' : '#ddd'}`,
-              color: tool === t ? '#fff' : '#555',
-              fontSize: '10px', fontWeight: 600, transition: 'all 0.12s',
-              boxShadow: tool === t ? '0 2px 8px rgba(99,102,241,0.35)' : 'none',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
+              background: tool === t ? '#e0e7ff' : 'transparent',
+              border: `1px solid ${tool === t ? '#c7d2fe' : 'transparent'}`,
+              color: tool === t ? '#4f46e5' : '#64748b',
+              fontSize: '12px', fontWeight: 600, transition: 'all 0.2s ease',
             }}
           >
-            <Icon style={{ width: '13px', height: '13px' }} />
+            <Icon style={{ width: '16px', height: '16px' }} />
             <span style={{ display: 'none' }}>{label}</span>
           </button>
         ))}
 
-        <div style={{ width: '1px', height: '26px', background: '#ccc', margin: '0 4px' }} />
+        <div style={{ width: '1px', height: '32px', background: '#e2e8f0', margin: '0 8px' }} />
 
         {/* Colors */}
         {COLORS.map(c => (
           <button key={c} onClick={() => setColor(c)}
             style={{
-              width: '22px', height: '22px', borderRadius: '50%', cursor: 'pointer',
+              width: '26px', height: '26px', borderRadius: '50%', cursor: 'pointer',
               background: c,
-              border: color === c ? '3px solid #6366f1' : '2px solid rgba(0,0,0,0.15)',
-              boxShadow: color === c ? '0 0 0 2px rgba(99,102,241,0.25)' : 'none',
-              transform: color === c ? 'scale(1.2)' : 'scale(1)',
-              transition: 'all 0.12s', flexShrink: 0,
+              border: color === c ? '3px solid #6366f1' : '1px solid rgba(0,0,0,0.1)',
+              boxShadow: color === c ? '0 0 0 3px rgba(99,102,241,0.2)' : 'none',
+              transform: color === c ? 'scale(1.1)' : 'scale(1)',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', flexShrink: 0,
             }}
           />
         ))}
 
-        {/* Custom color */}
-        <label style={{ position: 'relative', width: '22px', height: '22px', cursor: 'pointer', flexShrink: 0 }}>
-          <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'conic-gradient(red,yellow,green,cyan,blue,magenta,red)', border: '2px solid rgba(0,0,0,0.15)' }} />
+        <label style={{ position: 'relative', width: '26px', height: '26px', cursor: 'pointer', flexShrink: 0, marginLeft: '4px' }}>
+          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'conic-gradient(red,yellow,green,cyan,blue,magenta,red)', border: '1px solid rgba(0,0,0,0.1)' }} />
           <input type="color" value={color} onChange={e => setColor(e.target.value)}
             style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
         </label>
 
-        <div style={{ width: '1px', height: '26px', background: '#ccc', margin: '0 4px' }} />
+        <div style={{ width: '1px', height: '32px', background: '#e2e8f0', margin: '0 8px' }} />
 
-        {/* Size */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '10px', color: '#888', fontWeight: 600 }}>Size</span>
+        {/* Size Slider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px' }}>
+          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Size</span>
           <input type="range" min={1} max={14} value={size} onChange={e => setSize(parseInt(e.target.value))}
-            style={{ width: '80px', accentColor: '#6366f1', cursor: 'pointer' }} />
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#555', minWidth: '18px' }}>{size}</span>
+            style={{ width: '100px', accentColor: '#6366f1', cursor: 'pointer' }} />
+          <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', minWidth: '20px', textAlign: 'right' }}>{size}</span>
         </div>
 
-        <div style={{ width: '1px', height: '26px', background: '#ccc', margin: '0 4px' }} />
+        <div style={{ width: '1px', height: '32px', background: '#e2e8f0', margin: '0 8px' }} />
 
         {/* Action buttons */}
         <button onClick={undo} disabled={!objs.length} title="Undo" style={tbtnStyle(!objs.length)}>
-          <RotateCcw style={{ width: '13px', height: '13px' }} />
+          <RotateCcw style={{ width: '15px', height: '15px' }} />
         </button>
         <button onClick={redo} disabled={!redoStack.length} title="Redo" style={tbtnStyle(!redoStack.length)}>
-          <Redo style={{ width: '13px', height: '13px' }} />
+          <Redo style={{ width: '15px', height: '15px' }} />
         </button>
-        <button onClick={download} title="Download" style={tbtnStyle(false, '#2ecc71')}>
-          <Download style={{ width: '13px', height: '13px' }} />
+        <button onClick={download} title="Download" style={tbtnStyle(false, '#10b981', 'rgba(16,185,129,0.1)')}>
+          <Download style={{ width: '15px', height: '15px' }} />
         </button>
-        <button onClick={clear} disabled={!objs.length} title="Clear all" style={tbtnStyle(!objs.length, '#e74c3c')}>
-          <Trash2 style={{ width: '13px', height: '13px' }} />
+        <button onClick={clear} disabled={!objs.length} title="Clear all" style={tbtnStyle(!objs.length, '#ef4444', 'rgba(239,68,68,0.1)')}>
+          <Trash2 style={{ width: '15px', height: '15px' }} />
         </button>
 
         <div style={{ flex: 1 }} />
 
-        {/* Close */}
+        {/* Close Modal */}
         <button onClick={onClose} title="Close (Esc)"
           style={{
-            display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '5px',
-            cursor: 'pointer', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)',
-            color: '#e74c3c', fontSize: '11px', fontWeight: 700,
+            display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px',
+            cursor: 'pointer', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
+            color: '#ef4444', fontSize: '13px', fontWeight: 700, transition: 'all 0.2s ease',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
           }}
         >
-          <X style={{ width: '13px', height: '13px' }} />
+          <X style={{ width: '16px', height: '16px' }} />
           Close
         </button>
       </div>
 
-      {/* ── Canvas ── */}
-      <div ref={containerRef} style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#ffffff' }}>
-        {/* Subtle dot grid */}
+      {/* ── Canvas Area ── */}
+      <div ref={containerRef} style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#ffffff', borderTop: '1px solid #f1f5f9' }}>
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: 'radial-gradient(circle, #ddd 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-          opacity: 0.6,
+          backgroundImage: 'radial-gradient(circle, #cbd5e1 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+          opacity: 0.5,
         }} />
 
         <canvas
@@ -303,9 +296,8 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
           }}
         />
 
-        {/* Floating text input */}
         {showText && (
-          <div style={{ position: 'absolute', left: textPos.x, top: textPos.y - 22, zIndex: 10 }}>
+          <div style={{ position: 'absolute', left: textPos.x, top: textPos.y - 28, zIndex: 10 }}>
             <input
               ref={textRef}
               value={textVal}
@@ -314,28 +306,28 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
               onBlur={commitText}
               placeholder="Type here…"
               style={{
-                background: 'rgba(255,255,255,0.95)', border: `2px solid ${color}`,
-                borderRadius: '4px', padding: '4px 8px',
+                background: '#ffffff', border: `2px solid ${color}`,
+                borderRadius: '8px', padding: '6px 12px',
                 color, fontSize: `${Math.max(16, size * 5)}px`,
-                fontFamily: "'Segoe UI', sans-serif",
-                outline: 'none', minWidth: '140px',
-                boxShadow: `0 2px 12px ${color}33`,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 600,
+                outline: 'none', minWidth: '180px',
+                boxShadow: `0 4px 16px ${color}20`,
               }}
             />
-            <div style={{ fontSize: '10px', color: '#aaa', marginTop: '3px' }}>Enter → commit · Esc → cancel</div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', fontWeight: 500 }}>Enter to commit • Esc to cancel</div>
           </div>
         )}
 
-        {/* Empty hint */}
         {objs.length === 0 && !drawing && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
             pointerEvents: 'none',
           }}>
             <div style={{ textAlign: 'center' }}>
-              <Pen style={{ width: '32px', height: '32px', color: '#ddd', margin: '0 auto 12px', display: 'block' }} />
-              <p style={{ fontSize: '16px', fontWeight: 600, color: '#ccc' }}>Start drawing</p>
-              <p style={{ fontSize: '12px', color: '#ddd', marginTop: '5px' }}>Pick a tool above and draw anything</p>
+              <Pen style={{ width: '40px', height: '40px', color: '#cbd5e1', margin: '0 auto 16px', display: 'block' }} />
+              <p style={{ fontSize: '20px', fontWeight: 700, color: '#94a3b8' }}>Start Creating</p>
+              <p style={{ fontSize: '14px', color: '#cbd5e1', marginTop: '8px', fontWeight: 500 }}>Select a tool from the bar above</p>
             </div>
           </div>
         )}
@@ -344,10 +336,11 @@ export default function WhiteboardModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-const tbtnStyle = (dis: boolean, activeColor?: string): React.CSSProperties => ({
-  padding: '5px', borderRadius: '5px', cursor: dis ? 'not-allowed' : 'pointer',
-  background: 'rgba(0,0,0,0.04)', border: '1px solid #ddd',
-  color: dis ? '#ccc' : (activeColor || '#555'),
-  opacity: dis ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  transition: 'all 0.12s',
+const tbtnStyle = (dis: boolean, activeColor?: string, activeBg?: string): React.CSSProperties => ({
+  padding: '8px', borderRadius: '8px', cursor: dis ? 'not-allowed' : 'pointer',
+  background: dis ? 'transparent' : (activeBg || '#f1f5f9'), border: '1px solid',
+  borderColor: dis ? 'transparent' : (activeColor ? activeColor + '30' : '#e2e8f0'),
+  color: dis ? '#cbd5e1' : (activeColor || '#475569'),
+  opacity: dis ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  transition: 'all 0.2s ease',
 });

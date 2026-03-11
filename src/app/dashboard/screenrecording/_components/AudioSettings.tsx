@@ -23,9 +23,9 @@ const SEG_COUNT = 52;
 const dbToPos = (db: number) => Math.max(0, Math.min(1, (db + 60) / 60));
 
 const getSegColor = (ratio: number): string => {
-  if (ratio >= dbToPos(-3)) return '#c0392b';
-  if (ratio >= dbToPos(-9)) return '#d4890a';
-  return '#27a645';
+  if (ratio >= dbToPos(-3)) return '#ef4444';
+  if (ratio >= dbToPos(-9)) return '#f59e0b';
+  return '#10b981';
 };
 
 // ─── OBS-style VU Channel Strip ──────────────────────────────────────────────
@@ -76,7 +76,6 @@ const ChannelStrip = ({
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     if (!active || muted) {
-      // Decay animation
       const decay = () => {
         levelRef.current = Math.max(0, levelRef.current - 0.04);
         const p = levelRef.current;
@@ -104,7 +103,6 @@ const ChannelStrip = ({
         const db = rms > 0.0001 ? 20 * Math.log10(rms) : -60;
         const pos = dbToPos(Math.max(-60, Math.min(0, db)));
 
-        // Smooth rise, fast attack
         levelRef.current = Math.max(pos, levelRef.current * 0.92);
         const p = levelRef.current;
 
@@ -123,45 +121,47 @@ const ChannelStrip = ({
   }, [active, muted, analyserRef]);
 
   const dbDisplay = dbLevel <= -59 ? '-∞' : `${dbLevel.toFixed(1)}`;
-  const dbColor = dbLevel >= -3 ? '#e74c3c' : dbLevel >= -9 ? '#f39c12' : '#2ecc71';
+  const dbColor = dbLevel >= -3 ? '#ef4444' : dbLevel >= -9 ? '#f59e0b' : '#10b981';
 
   return (
     <div style={{
-      background: '#1c1c1c', border: '1px solid #363636',
-      borderRadius: '5px', overflow: 'hidden',
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
+      background: '#18181b', border: '1px solid #27272a',
+      borderRadius: '8px', overflow: 'hidden',
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     }}>
       {/* ── Header ── */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '6px 9px',
-        background: active ? `linear-gradient(90deg, ${accent}18 0%, #222 100%)` : '#222',
-        borderBottom: '1px solid #2c2c2c',
+        padding: '10px 12px',
+        background: active ? `linear-gradient(90deg, ${accent}15 0%, transparent 100%)` : 'transparent',
+        borderBottom: '1px solid #27272a',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '22px', height: '22px', borderRadius: '4px',
-            background: active ? `${accent}20` : '#2e2e2e',
-            border: `1px solid ${active ? accent + '50' : '#404040'}`,
+            width: '28px', height: '28px', borderRadius: '6px',
+            background: active ? `${accent}20` : '#27272a',
+            border: `1px solid ${active ? accent + '40' : '#3f3f46'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            transition: 'all 0.2s ease',
           }}>
             {active
-              ? <Icon style={{ width: '11px', height: '11px', color: accent }} />
-              : <IconOff style={{ width: '11px', height: '11px', color: '#555' }} />
+              ? <Icon style={{ width: '14px', height: '14px', color: accent }} />
+              : <IconOff style={{ width: '14px', height: '14px', color: '#71717a' }} />
             }
           </div>
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: active ? '#ddd' : '#777', lineHeight: 1.1 }}>{label}</div>
-            <div style={{ fontSize: '9px', color: '#484848', marginTop: '1px' }}>{subLabel}</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: active ? '#f4f4f5' : '#a1a1aa', lineHeight: 1.2 }}>{label}</div>
+            <div style={{ fontSize: '10px', color: '#71717a', marginTop: '2px', fontWeight: 500 }}>{subLabel}</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {active && !muted && (
             <span style={{
-              fontSize: '9px', fontWeight: 700, fontFamily: 'monospace',
-              color: dbColor, padding: '1px 4px',
-              background: '#111', borderRadius: '3px',
-              border: `1px solid ${dbColor}44`,
+              fontSize: '10px', fontWeight: 700, fontFamily: 'monospace',
+              color: dbColor, padding: '2px 6px',
+              background: '#09090b', borderRadius: '4px',
+              border: `1px solid ${dbColor}30`,
             }}>
               {dbDisplay} dB
             </span>
@@ -170,14 +170,14 @@ const ChannelStrip = ({
             onClick={onToggle}
             disabled={disabled}
             style={{
-              padding: '2px 8px', borderRadius: '3px',
+              padding: '4px 10px', borderRadius: '5px',
               cursor: disabled ? 'not-allowed' : 'pointer',
-              background: active ? accent : '#333',
-              border: `1px solid ${active ? accent : '#505050'}`,
-              color: '#fff', fontSize: '10px', fontWeight: 700,
-              opacity: disabled ? 0.45 : 1, transition: 'all 0.15s',
-              boxShadow: active ? `0 0 7px ${accent}55` : 'none',
-              letterSpacing: '0.04em',
+              background: active ? accent : '#27272a',
+              border: `1px solid ${active ? accent : '#3f3f46'}`,
+              color: active ? '#ffffff' : '#a1a1aa', fontSize: '10px', fontWeight: 700,
+              opacity: disabled ? 0.5 : 1, transition: 'all 0.2s ease',
+              boxShadow: active ? `0 0 10px ${accent}40` : 'none',
+              letterSpacing: '0.05em', textTransform: 'uppercase',
             }}
           >
             {active ? 'ON' : 'OFF'}
@@ -187,43 +187,45 @@ const ChannelStrip = ({
 
       {/* ── Device selector ── */}
       {active && (
-        <div style={{ padding: '5px 9px', borderBottom: '1px solid #252525', position: 'relative' }}>
+        <div style={{ padding: '8px 12px', borderBottom: '1px solid #27272a', position: 'relative' }}>
           <button
             onClick={() => !isSystemAudio && setDropOpen(o => !o)}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '4px 7px', borderRadius: '3px',
+              padding: '6px 10px', borderRadius: '6px',
               cursor: isSystemAudio ? 'default' : 'pointer',
-              background: '#252525', border: '1px solid #383838',
-              color: '#b0b0b0', fontSize: '10px', fontFamily: 'inherit', gap: '4px',
+              background: '#09090b', border: '1px solid #3f3f46',
+              color: '#e4e4e7', fontSize: '11px', fontFamily: 'inherit', fontWeight: 500, gap: '6px',
+              transition: 'border-color 0.2s ease',
             }}
           >
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left', maxWidth: '175px' }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left', maxWidth: '190px' }}>
               {isSystemAudio
                 ? (systemPreviewActive ? '● Capturing system audio' : 'System Default')
                 : (selected?.label || 'Default – Microphone')
               }
             </span>
             {!isSystemAudio && (
-              <ChevronDown style={{ width: '10px', height: '10px', color: '#555', flexShrink: 0, transform: dropOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+              <ChevronDown style={{ width: '12px', height: '12px', color: '#71717a', flexShrink: 0, transform: dropOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
             )}
           </button>
           {dropOpen && !isSystemAudio && devices.length > 0 && (
             <div style={{
-              position: 'absolute', top: '100%', left: '9px', right: '9px', zIndex: 200, marginTop: '2px',
-              background: '#222', border: '1px solid #444', borderRadius: '4px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+              position: 'absolute', top: '100%', left: '12px', right: '12px', zIndex: 200, marginTop: '4px',
+              background: '#18181b', border: '1px solid #3f3f46', borderRadius: '6px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)', overflow: 'hidden'
             }}>
               {devices.map(d => (
                 <button key={d.deviceId}
                   onClick={() => { onDeviceChange(d.deviceId); setDropOpen(false); }}
                   style={{
-                    width: '100%', display: 'block', textAlign: 'left', padding: '6px 9px',
-                    background: d.deviceId === (selectedId || devices[0]?.deviceId) ? `${accent}1a` : 'transparent',
-                    color: d.deviceId === (selectedId || devices[0]?.deviceId) ? accent : '#aaa',
-                    fontSize: '10px', fontFamily: 'inherit', cursor: 'pointer',
-                    borderBottom: '1px solid #2e2e2e',
+                    width: '100%', display: 'block', textAlign: 'left', padding: '8px 10px',
+                    background: d.deviceId === (selectedId || devices[0]?.deviceId) ? `${accent}15` : 'transparent',
+                    color: d.deviceId === (selectedId || devices[0]?.deviceId) ? accent : '#a1a1aa',
+                    fontSize: '11px', fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer',
+                    borderBottom: '1px solid #27272a',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    transition: 'background 0.15s ease'
                   }}
                 >{d.label}</button>
               ))}
@@ -233,26 +235,24 @@ const ChannelStrip = ({
       )}
 
       {/* ── OBS VU Meter ── */}
-      <div style={{ padding: '7px 9px 5px', background: '#0f0f0f' }}>
-        {/* dB scale */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+      <div style={{ padding: '10px 12px', background: '#09090b' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
           {DB_MARKERS.map((m, i) => (
             <span key={i} style={{
-              fontSize: '7.5px', fontFamily: 'monospace',
-              color: i >= 6 ? '#8b2020' : i === 5 ? '#7a6010' : '#3a3a3a',
-              letterSpacing: '-0.04em',
+              fontSize: '8px', fontFamily: 'monospace', fontWeight: 600,
+              color: i >= 6 ? '#ef4444' : i === 5 ? '#f59e0b' : '#52525b',
+              letterSpacing: '-0.02em',
             }}>{m}</span>
           ))}
         </div>
 
-        {/* Meter track — 2 rows like OBS stereo */}
         {[0, 1].map(row => (
           <div key={row} style={{
-            height: '8px', borderRadius: '1px',
-            background: '#080808', border: '1px solid #1e1e1e',
+            height: '6px', borderRadius: '3px',
+            background: '#000000', border: '1px solid #27272a',
             display: 'flex', alignItems: 'stretch', overflow: 'hidden',
             gap: '1px', padding: '1px',
-            marginBottom: row === 0 ? '2px' : '0',
+            marginBottom: row === 0 ? '4px' : '0',
             position: 'relative',
           }}>
             {active && !muted ? (
@@ -263,102 +263,97 @@ const ChannelStrip = ({
                   const color = getSegColor(ratio);
                   return (
                     <div key={i} style={{
-                      flex: 1, borderRadius: '0.5px',
-                      background: lit ? color : `${color}1a`,
-                      boxShadow: lit && ratio >= dbToPos(-3) ? `0 0 2px ${color}` : 'none',
-                      transition: 'background 0.03s',
+                      flex: 1, borderRadius: '1px',
+                      background: lit ? color : `${color}15`,
+                      boxShadow: lit && ratio >= dbToPos(-3) ? `0 0 4px ${color}` : 'none',
+                      transition: 'background 0.05s',
                     }} />
                   );
                 })}
-                {/* Peak hold */}
                 {peak > 0 && (
                   <div style={{
                     position: 'absolute', top: '1px', bottom: '1px', width: '2px',
                     left: `calc(${peak * 100}% - 2px)`,
-                    background: peak >= dbToPos(-3) ? '#ff4444' : peak >= dbToPos(-9) ? '#ffaa00' : '#eee',
+                    background: peak >= dbToPos(-3) ? '#f87171' : peak >= dbToPos(-9) ? '#fbbf24' : '#f4f4f5',
                     borderRadius: '1px',
-                    boxShadow: '0 0 3px rgba(255,255,255,0.5)',
-                    transition: 'left 0.04s',
+                    boxShadow: '0 0 4px rgba(255,255,255,0.6)',
+                    transition: 'left 0.05s',
                   }} />
                 )}
               </>
             ) : (
-              // Inactive: show dim segments
               Array.from({ length: SEG_COUNT }, (_, i) => (
                 <div key={i} style={{
-                  flex: 1, borderRadius: '0.5px',
-                  background: getSegColor(i / SEG_COUNT) + '12',
+                  flex: 1, borderRadius: '1px',
+                  background: getSegColor(i / SEG_COUNT) + '10',
                 }} />
               ))
             )}
           </div>
         ))}
 
-        {/* System audio preview button */}
         {isSystemAudio && active && !systemPreviewActive && (
           <button
             onClick={onRequestSystemPreview}
             style={{
-              marginTop: '6px', width: '100%', padding: '4px 8px', borderRadius: '3px',
-              cursor: 'pointer', background: '#1a2b1a', border: '1px solid #2d4d2d',
-              color: '#4caf50', fontSize: '9px', fontWeight: 600,
-              fontFamily: 'inherit', letterSpacing: '0.03em',
+              marginTop: '10px', width: '100%', padding: '6px 8px', borderRadius: '5px',
+              cursor: 'pointer', background: '#052e16', border: '1px solid #064e3b',
+              color: '#34d399', fontSize: '10px', fontWeight: 600,
+              fontFamily: 'inherit', letterSpacing: '0.04em', transition: 'all 0.2s ease'
             }}
           >
-            ▶ Preview System Audio (click to capture)
+            ▶ Preview System Audio (Click to capture)
           </button>
         )}
         {isSystemAudio && systemPreviewActive && (
-          <div style={{ marginTop: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#e74c3c', boxShadow: '0 0 4px #e74c3c', animation: 'pulse 1s infinite' }} />
-            <span style={{ fontSize: '9px', color: '#888', fontFamily: 'inherit' }}>Live system audio preview active</span>
+          <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', padding: '4px', background: '#09090b', borderRadius: '4px', border: '1px solid #27272a' }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 6px #ef4444', animation: 'pulse 1.5s infinite ease-in-out' }} />
+            <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 500 }}>Live preview active</span>
           </div>
         )}
       </div>
 
       {/* ── Volume fader row ── */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: '6px',
-        padding: '5px 9px 7px', background: '#141414', borderTop: '1px solid #1e1e1e',
+        display: 'flex', alignItems: 'center', gap: '10px',
+        padding: '8px 12px 10px', background: '#18181b', borderTop: '1px solid #27272a',
       }}>
         <button
           onClick={onMuteToggle}
           disabled={!active}
           title={muted ? 'Unmute' : 'Mute'}
           style={{
-            width: '24px', height: '24px', borderRadius: '3px',
+            width: '28px', height: '28px', borderRadius: '6px',
             cursor: active ? 'pointer' : 'not-allowed',
-            background: muted ? 'rgba(192,57,43,0.25)' : '#252525',
-            border: `1px solid ${muted ? '#c0392b88' : '#3c3c3c'}`,
+            background: muted ? 'rgba(239,68,68,0.1)' : '#27272a',
+            border: `1px solid ${muted ? 'rgba(239,68,68,0.3)' : '#3f3f46'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, transition: 'all 0.12s',
-            opacity: active ? 1 : 0.35,
+            flexShrink: 0, transition: 'all 0.2s ease',
+            opacity: active ? 1 : 0.4,
           }}
         >
           {muted
-            ? <VolumeX style={{ width: '12px', height: '12px', color: '#e74c3c' }} />
-            : <Volume2 style={{ width: '12px', height: '12px', color: '#888' }} />
+            ? <VolumeX style={{ width: '14px', height: '14px', color: '#ef4444' }} />
+            : <Volume2 style={{ width: '14px', height: '14px', color: '#a1a1aa' }} />
           }
         </button>
 
-        {/* Fader */}
-        <div style={{ flex: 1, position: 'relative', height: '18px', display: 'flex', alignItems: 'center' }}>
+        <div style={{ flex: 1, position: 'relative', height: '20px', display: 'flex', alignItems: 'center' }}>
           <div style={{
-            position: 'absolute', width: '100%', height: '3px',
-            borderRadius: '1.5px', background: '#1e1e1e', border: '1px solid #2e2e2e',
+            position: 'absolute', width: '100%', height: '4px',
+            borderRadius: '2px', background: '#09090b', border: '1px solid #27272a',
           }}>
             <div style={{
-              height: '100%', borderRadius: '1.5px', width: `${volume}%`,
-              background: volume > 90 ? 'linear-gradient(90deg,#27a645 60%,#d4890a 80%,#c0392b)' : '#27a645',
+              height: '100%', borderRadius: '2px', width: `${volume}%`,
+              background: volume > 90 ? 'linear-gradient(90deg,#10b981 60%,#f59e0b 80%,#ef4444)' : '#10b981',
             }} />
           </div>
-          {/* OBS-style square thumb */}
           <div style={{
             position: 'absolute', left: `calc(${volume}% - 6px)`,
-            width: '12px', height: '18px', borderRadius: '2px',
-            background: 'linear-gradient(180deg,#d0d0d0,#a0a0a0)',
-            border: '1px solid #707070',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.6)',
+            width: '12px', height: '16px', borderRadius: '4px',
+            background: 'linear-gradient(180deg,#f4f4f5,#d4d4d8)',
+            border: '1px solid #71717a',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.5)',
             pointerEvents: 'none',
           }} />
           <input
@@ -366,25 +361,25 @@ const ChannelStrip = ({
             onChange={e => onVolumeChange(parseInt(e.target.value))}
             disabled={!active || muted}
             style={{
-              position: 'absolute', width: '100%', opacity: 0, height: '18px', zIndex: 2,
+              position: 'absolute', width: '100%', opacity: 0, height: '20px', zIndex: 2,
               cursor: (!active || muted) ? 'not-allowed' : 'ew-resize',
             }}
           />
         </div>
 
         <span style={{
-          fontSize: '9px', fontWeight: 700, fontFamily: 'monospace',
-          color: muted ? '#c0392b' : '#585858', minWidth: '28px', textAlign: 'right',
+          fontSize: '11px', fontWeight: 700, fontFamily: 'monospace',
+          color: muted ? '#ef4444' : '#a1a1aa', minWidth: '36px', textAlign: 'right',
         }}>
           {muted ? 'MUTE' : `${volume}%`}
         </span>
 
         <button title="Settings" style={{
-          width: '20px', height: '20px', borderRadius: '3px',
-          background: 'transparent', border: '1px solid #2e2e2e',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          width: '24px', height: '24px', borderRadius: '6px',
+          background: 'transparent', border: '1px solid #3f3f46',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s ease'
         }}>
-          <Settings2 style={{ width: '10px', height: '10px', color: '#444' }} />
+          <Settings2 style={{ width: '12px', height: '12px', color: '#a1a1aa' }} />
         </button>
       </div>
     </div>
@@ -425,11 +420,9 @@ const AudioSettings = ({
   // Enumerate
   const enumerateDevices = useCallback(async () => {
     try {
-      // Request both audio + video permissions so browsers reveal real device labels
       await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
         .then(s => s.getTracks().forEach(t => t.stop()))
         .catch(() => {
-          // If combined fails, try audio-only (camera may still enumerate with IDs)
           return navigator.mediaDevices.getUserMedia({ audio: true, video: false })
             .then(s => s.getTracks().forEach(t => t.stop()))
             .catch(() => {});
@@ -526,37 +519,38 @@ const AudioSettings = ({
   const cameraActive = !!localCamId && localCamId !== 'none';
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-      {/* Panel title bar — OBS style */}
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Panel title bar */}
       <div style={{
-        background: 'linear-gradient(180deg, #3a3a3a, #2e2e2e)',
-        border: '1px solid #484848',
+        background: '#18181b',
+        border: '1px solid #27272a',
         borderBottom: 'none',
-        borderRadius: '5px 5px 0 0',
-        padding: '5px 10px',
+        borderRadius: '8px 8px 0 0',
+        padding: '10px 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
       }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: '#c8c8c8', letterSpacing: '0.05em', textTransform: 'uppercase' as const }}>
-          Audio Mixer
+        <span style={{ fontSize: '11px', fontWeight: 700, color: '#f4f4f5', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          Audio & Camera Mixer
         </span>
-        <div style={{ display: 'flex', gap: '5px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '1px', background: '#404040', border: '1px solid #555' }} />
-          <div style={{ width: '8px', height: '8px', borderRadius: '1px', background: '#404040', border: '1px solid #555' }} />
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3f3f46' }} />
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3f3f46' }} />
         </div>
       </div>
 
       <div style={{
-        background: '#181818', border: '1px solid #363636',
-        borderTop: 'none', borderRadius: '0 0 5px 5px',
-        padding: '8px', display: 'flex', flexDirection: 'column', gap: '7px',
+        background: '#09090b', border: '1px solid #27272a',
+        borderTop: 'none', borderRadius: '0 0 8px 8px',
+        padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px',
       }}>
         {/* Desktop Audio */}
         <ChannelStrip
-          label="Desktop Audio" subLabel="System sound"
+          label="Desktop Audio" subLabel="Capture system sounds"
           icon={Monitor} iconOff={Monitor}
           active={systemAudio} onToggle={onSystemToggle}
           devices={[]} selectedId="" onDeviceChange={() => {}}
-          accent="#d4890a" disabled={disabled}
+          accent="#f59e0b" disabled={disabled}
           analyserRef={sysAnalyserRef} dbLevel={sysDb}
           volume={sysVolume} onVolumeChange={setSysVolume}
           muted={sysMuted} onMuteToggle={() => setSysMuted(v => !v)}
@@ -566,11 +560,11 @@ const AudioSettings = ({
 
         {/* Mic / Aux */}
         <ChannelStrip
-          label="Mic / Aux" subLabel="Microphone input"
+          label="Mic / Aux Input" subLabel="Default communication device"
           icon={Mic} iconOff={MicOff}
           active={micAudio} onToggle={onMicToggle}
           devices={mics} selectedId={selectedMicId} onDeviceChange={onMicDeviceChange}
-          accent="#27a645" disabled={disabled}
+          accent="#10b981" disabled={disabled}
           analyserRef={micAnalyserRef} dbLevel={micDb}
           volume={micVolume} onVolumeChange={setMicVolume}
           muted={micMuted} onMuteToggle={() => setMicMuted(v => !v)}
@@ -578,40 +572,40 @@ const AudioSettings = ({
 
         {/* Video Capture */}
         <div style={{
-          background: '#1c1c1c', border: '1px solid #363636',
-          borderRadius: '5px', overflow: 'hidden',
+          background: '#18181b', border: '1px solid #27272a',
+          borderRadius: '8px', overflow: 'hidden',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
         }}>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '6px 9px',
-            background: cameraActive ? 'linear-gradient(90deg, rgba(6,182,212,0.1) 0%, #222 100%)' : '#222',
-            borderBottom: cameraActive ? '1px solid #2c2c2c' : 'none',
+            padding: '10px 12px',
+            background: cameraActive ? 'linear-gradient(90deg, rgba(6,182,212,0.1) 0%, transparent 100%)' : 'transparent',
+            borderBottom: cameraActive ? '1px solid #27272a' : 'none',
+            transition: 'all 0.3s ease'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
-                width: '22px', height: '22px', borderRadius: '4px',
-                background: cameraActive ? 'rgba(6,182,212,0.18)' : '#2e2e2e',
-                border: `1px solid ${cameraActive ? 'rgba(6,182,212,0.45)' : '#404040'}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '28px', height: '28px', borderRadius: '6px',
+                background: cameraActive ? 'rgba(6,182,212,0.15)' : '#27272a',
+                border: `1px solid ${cameraActive ? 'rgba(6,182,212,0.3)' : '#3f3f46'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease'
               }}>
                 {cameraActive
-                  ? <Camera style={{ width: '11px', height: '11px', color: '#06b6d4' }} />
-                  : <CameraOff style={{ width: '11px', height: '11px', color: '#555' }} />
+                  ? <Camera style={{ width: '14px', height: '14px', color: '#06b6d4' }} />
+                  : <CameraOff style={{ width: '14px', height: '14px', color: '#71717a' }} />
                 }
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: cameraActive ? '#ddd' : '#777', lineHeight: 1.1 }}>Video Capture</div>
-                <div style={{ fontSize: '9px', color: '#484848', marginTop: '1px' }}>Camera device</div>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: cameraActive ? '#f4f4f5' : '#a1a1aa', lineHeight: 1.2 }}>Video Capture</div>
+                <div style={{ fontSize: '10px', color: '#71717a', marginTop: '2px', fontWeight: 500 }}>Select camera feed</div>
               </div>
             </div>
             <button
               onClick={async () => {
                 if (cameraActive) {
-                  // Turn OFF
                   setLocalCamId('none');
                   onCameraDeviceChange('none');
                 } else {
-                  // Turn ON — if cameras not yet enumerated, request permission first
                   let camList = cameras;
                   if (camList.length === 0) {
                     try {
@@ -624,7 +618,7 @@ const AudioSettings = ({
                       setCameras(camList);
                     } catch (err) {
                       console.error('Camera permission denied:', err);
-                      return; // permission denied, do nothing
+                      return; 
                     }
                   }
                   const firstId = camList[0]?.deviceId || 'default';
@@ -634,13 +628,13 @@ const AudioSettings = ({
               }}
               disabled={disabled}
               style={{
-                padding: '2px 8px', borderRadius: '3px',
+                padding: '4px 10px', borderRadius: '5px',
                 cursor: disabled ? 'not-allowed' : 'pointer',
-                background: cameraActive ? '#06b6d4' : '#333',
-                border: `1px solid ${cameraActive ? '#06b6d4' : '#505050'}`,
-                color: '#fff', fontSize: '10px', fontWeight: 700,
-                opacity: disabled ? 0.45 : 1, transition: 'all 0.15s',
-                boxShadow: cameraActive ? '0 0 7px rgba(6,182,212,0.4)' : 'none',
+                background: cameraActive ? '#06b6d4' : '#27272a',
+                border: `1px solid ${cameraActive ? '#06b6d4' : '#3f3f46'}`,
+                color: cameraActive ? '#ffffff' : '#a1a1aa', fontSize: '10px', fontWeight: 700,
+                opacity: disabled ? 0.5 : 1, transition: 'all 0.2s ease',
+                boxShadow: cameraActive ? '0 0 10px rgba(6,182,212,0.4)' : 'none', letterSpacing: '0.05em'
               }}
             >
               {cameraActive ? 'ON' : 'OFF'}
@@ -648,37 +642,39 @@ const AudioSettings = ({
           </div>
 
           {cameraActive && cameras.length > 0 && (
-            <div style={{ padding: '5px 9px 7px', background: '#111', position: 'relative' }}>
+            <div style={{ padding: '8px 12px 10px', background: '#09090b', position: 'relative' }}>
               <button
                 onClick={() => setCamDropOpen(o => !o)}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '4px 7px', borderRadius: '3px', cursor: 'pointer',
-                  background: '#252525', border: '1px solid #383838',
-                  color: '#b0b0b0', fontSize: '10px', fontFamily: 'inherit',
+                  padding: '6px 10px', borderRadius: '6px', cursor: 'pointer',
+                  background: '#18181b', border: '1px solid #3f3f46',
+                  color: '#e4e4e7', fontSize: '11px', fontWeight: 500, fontFamily: 'inherit',
+                  transition: 'border-color 0.2s ease'
                 }}
               >
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '175px', textAlign: 'left' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '190px', textAlign: 'left' }}>
                   {cameras.find(c => c.deviceId === localCamId)?.label || cameras[0]?.label}
                 </span>
-                <ChevronDown style={{ width: '10px', height: '10px', color: '#555', transform: camDropOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+                <ChevronDown style={{ width: '12px', height: '12px', color: '#71717a', transform: camDropOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
               {camDropOpen && (
                 <div style={{
-                  position: 'absolute', top: '100%', left: '9px', right: '9px', zIndex: 200, marginTop: '2px',
-                  background: '#222', border: '1px solid #444', borderRadius: '4px',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+                  position: 'absolute', top: '100%', left: '12px', right: '12px', zIndex: 200, marginTop: '4px',
+                  background: '#18181b', border: '1px solid #3f3f46', borderRadius: '6px',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)', overflow: 'hidden'
                 }}>
                   {cameras.map(c => (
                     <button key={c.deviceId}
                       onClick={() => { setLocalCamId(c.deviceId); onCameraDeviceChange(c.deviceId); setCamDropOpen(false); }}
                       style={{
-                        width: '100%', display: 'block', textAlign: 'left', padding: '6px 9px',
-                        background: c.deviceId === localCamId ? 'rgba(6,182,212,0.12)' : 'transparent',
-                        color: c.deviceId === localCamId ? '#06b6d4' : '#aaa',
-                        fontSize: '10px', fontFamily: 'inherit', cursor: 'pointer',
-                        borderBottom: '1px solid #2e2e2e',
+                        width: '100%', display: 'block', textAlign: 'left', padding: '8px 10px',
+                        background: c.deviceId === localCamId ? 'rgba(6,182,212,0.1)' : 'transparent',
+                        color: c.deviceId === localCamId ? '#06b6d4' : '#a1a1aa',
+                        fontSize: '11px', fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer',
+                        borderBottom: '1px solid #27272a',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        transition: 'background 0.15s ease'
                       }}
                     >{c.label}</button>
                   ))}
@@ -692,7 +688,7 @@ const AudioSettings = ({
       <style>{`
         @keyframes pulse {
           0%,100%{opacity:1;transform:scale(1)}
-          50%{opacity:0.4;transform:scale(0.8)}
+          50%{opacity:0.6;transform:scale(0.85)}
         }
       `}</style>
     </div>
