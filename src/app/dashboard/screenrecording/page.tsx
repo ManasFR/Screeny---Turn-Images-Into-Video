@@ -1,8 +1,11 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback, RefObject } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Video, ChevronLeft, PenLine, Square, Pause, Play, RotateCcw, Download, Monitor } from 'lucide-react';
+import {
+  Video, ChevronLeft, PenLine, Square, Pause, Play,
+  RotateCcw, Download, Monitor, GripHorizontal,
+} from 'lucide-react';
 import { useScreenRecorder } from '@/hooks/useScreenRecorder';
 import { useAnnotation } from '@/hooks/useAnnotation';
 import AudioSettings from './_components/AudioSettings';
@@ -11,19 +14,77 @@ import CanvasOverlay from './_components/CanvasOverlay';
 import WhiteboardModal from './_components/WhiteboardModal';
 
 export default function ScreenRecordingPage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef       = useRef<HTMLCanvasElement>(null);
   const cameraVideoRef  = useRef<HTMLVideoElement>(null);
   const screenVideoRef  = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
 
-  const [micAudio, setMicAudio] = useState(true);
-  const [systemAudio, setSystemAudio] = useState(false);
-  const [selectedMicId, setSelectedMicId] = useState('');
-  const [selectedCameraId, setSelectedCameraId] = useState('none');
-  const [isPreviewActive, setIsPreviewActive] = useState(false);
-  const [showWhiteboard, setShowWhiteboard] = useState(false);
+  const [micAudio,         setMicAudio]         = useState(true);
+  const [systemAudio,      setSystemAudio]       = useState(false);
+  const [selectedMicId,    setSelectedMicId]     = useState('');
+  const [selectedCameraId, setSelectedCameraId]  = useState('none');
+  const [isPreviewActive,  setIsPreviewActive]   = useState(false);
+  const [showWhiteboard,   setShowWhiteboard]    = useState(false);
 
-  const recorder = useScreenRecorder();
+  // ── Draggable camera bubble ──────────────────────────────────────────────
+  const [camPos,     setCamPos]     = useState({ x: 16, y: 16 }); // distance from bottom-right
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart   = useRef({ mx: 0, my: 0, bx: 0, by: 0 });
+  const previewRef  = useRef<HTMLDivElement>(null);
+
+  const CAM_SIZE = 140; // diameter in px
+
+  const onCamMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStart.current = { mx: e.clientX, my: e.clientY, bx: camPos.x, by: camPos.y };
+  }, [camPos]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const onMove = (e: MouseEvent) => {
+      const dx = dragStart.current.mx - e.clientX;
+      const dy = dragStart.current.my - e.clientY;
+      const container = previewRef.current;
+      if (!container) return;
+      const { width, height } = container.getBoundingClientRect();
+      const newX = Math.max(8, Math.min(width  - CAM_SIZE - 8, dragStart.current.bx + dx));
+      const newY = Math.max(8, Math.min(height - CAM_SIZE - 8, dragStart.current.by + dy));
+      setCamPos({ x: newX, y: newY });
+    };
+    const onUp = () => setIsDragging(false);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [isDragging]);
+
+  // Touch support for mobile
+  const onCamTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    dragStart.current = { mx: t.clientX, my: t.clientY, bx: camPos.x, by: camPos.y };
+    setIsDragging(true);
+  }, [camPos]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const onMove = (e: TouchEvent) => {
+      const t = e.touches[0];
+      const dx = dragStart.current.mx - t.clientX;
+      const dy = dragStart.current.my - t.clientY;
+      const container = previewRef.current;
+      if (!container) return;
+      const { width, height } = container.getBoundingClientRect();
+      const newX = Math.max(8, Math.min(width  - CAM_SIZE - 8, dragStart.current.bx + dx));
+      const newY = Math.max(8, Math.min(height - CAM_SIZE - 8, dragStart.current.by + dy));
+      setCamPos({ x: newX, y: newY });
+    };
+    const onUp = () => setIsDragging(false);
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onUp);
+    return () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); };
+  }, [isDragging]);
+
+  const recorder   = useScreenRecorder();
   const annotation = useAnnotation(canvasRef as React.RefObject<HTMLCanvasElement>);
 
   // Wire display stream → screen preview <video>
@@ -41,39 +102,63 @@ export default function ScreenRecordingPage() {
     };
   }, []);
 
-  const isActive   = recorder.recordingState === 'recording' || recorder.recordingState === 'paused';
+  const isActive    = recorder.recordingState === 'recording' || recorder.recordingState === 'paused';
   const isRecording = recorder.recordingState === 'recording';
   const isPaused    = recorder.recordingState === 'paused';
   const isStopped   = recorder.recordingState === 'stopped';
   const isIdle      = recorder.recordingState === 'idle' || isStopped;
 
-  // Camera live preview
+  // ── Camera live preview ──────────────────────────────────────────────────
   const startCamera = useCallback(async (id: string) => {
+    // Stop old stream first
     cameraStreamRef.current?.getTracks().forEach(t => t.stop());
     cameraStreamRef.current = null;
+    if (cameraVideoRef.current) cameraVideoRef.current.srcObject = null;
     if (!id || id === 'none') return;
+
     try {
+      const videoConstraint =
+        id && id !== 'default' && id !== ''
+          ? { deviceId: { exact: id }, width: { ideal: 640 }, height: { ideal: 480 } }
+          : { width: { ideal: 640 }, height: { ideal: 480 } };
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: id !== 'default' ? { deviceId: { exact: id } } : true,
+        video: videoConstraint,
         audio: false,
       });
       cameraStreamRef.current = stream;
       if (cameraVideoRef.current) {
         cameraVideoRef.current.srcObject = stream;
-        cameraVideoRef.current.play().catch(() => {});
+        await cameraVideoRef.current.play().catch(() => {});
       }
-    } catch {}
+    } catch (err) {
+      console.error('Camera failed to start:', err);
+    }
   }, []);
 
   useEffect(() => {
-    if (selectedCameraId && selectedCameraId !== 'none') startCamera(selectedCameraId);
-    else { cameraStreamRef.current?.getTracks().forEach(t => t.stop()); if (cameraVideoRef.current) cameraVideoRef.current.srcObject = null; }
-    return () => { cameraStreamRef.current?.getTracks().forEach(t => t.stop()); };
+    if (selectedCameraId && selectedCameraId !== 'none') {
+      startCamera(selectedCameraId);
+    } else {
+      cameraStreamRef.current?.getTracks().forEach(t => t.stop());
+      cameraStreamRef.current = null;
+      if (cameraVideoRef.current) cameraVideoRef.current.srcObject = null;
+    }
+    return () => {
+      cameraStreamRef.current?.getTracks().forEach(t => t.stop());
+    };
   }, [selectedCameraId]);
 
+  // ── Recording controls ───────────────────────────────────────────────────
   const handleStart = async () => {
-    await recorder.startRecording({ micAudio, systemAudio, micDeviceId: selectedMicId });
+    await recorder.startRecording({
+      micAudio,
+      systemAudio,
+      micDeviceId: selectedMicId,
+      cameraStream: cameraStreamRef.current, // ← pass camera into recorder
+    });
   };
+
   const handleStop  = () => { recorder.stopRecording();  annotation.clearCanvas(); };
   const handleReset = () => { recorder.resetRecording(); annotation.clearCanvas(); };
 
@@ -81,16 +166,16 @@ export default function ScreenRecordingPage() {
 
   return (
     <>
-      {/* Jakarta Sans font */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(0.85)} }
-        select, input, button { font-family: 'Plus Jakarta Sans', sans-serif; outline: none; }
+        @keyframes blink  { 0%,100%{opacity:1}  50%{opacity:0.3} }
+        @keyframes pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(0.85)} }
+        @keyframes camPop { 0%{transform:scale(0.7);opacity:0} 100%{transform:scale(1);opacity:1} }
+        select, input, button { font-family: 'Plus Jakarta Sans', sans-serif; outline: none; border: none; }
       `}</style>
 
       <div style={{
@@ -99,7 +184,7 @@ export default function ScreenRecordingPage() {
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}>
 
-        {/* ── Title bar ── */}
+        {/* ── Title bar ───────────────────────────────────────────────────── */}
         <div style={{
           height: '38px', flexShrink: 0,
           background: 'linear-gradient(180deg,#3a3a3a 0%,#2d2d2d 100%)',
@@ -166,19 +251,20 @@ export default function ScreenRecordingPage() {
           </div>
         </div>
 
-        {/* ── Main preview ── */}
-        <div style={{
-          flex: 1, minHeight: 0, position: 'relative',
-          background: '#0a0a0a',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          overflow: 'hidden',
-        }}>
+        {/* ── Main preview ─────────────────────────────────────────────────── */}
+        <div
+          ref={previewRef}
+          style={{
+            flex: 1, minHeight: 0, position: 'relative',
+            background: '#0a0a0a',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+        >
           {/* Screen capture live preview */}
           <video
             ref={screenVideoRef}
-            autoPlay
-            playsInline
-            muted
+            autoPlay playsInline muted
             style={{
               position: 'absolute', inset: 0, width: '100%', height: '100%',
               objectFit: 'contain', background: '#000',
@@ -186,19 +272,64 @@ export default function ScreenRecordingPage() {
             }}
           />
 
-          {/* Camera feed (picture-in-picture style when screen also active) */}
-          <video
-            ref={cameraVideoRef}
-            autoPlay playsInline muted
-            style={{
-              position: isPreviewActive ? 'absolute' : 'absolute',
-              ...(isPreviewActive
-                ? { bottom: 16, right: 16, width: '220px', height: '124px', borderRadius: '8px', border: '2px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', objectFit: 'cover', zIndex: 5 }
-                : { inset: 0, width: '100%', height: '100%', objectFit: 'contain' }
-              ),
-              display: hasCamera ? 'block' : 'none',
-            }}
-          />
+          {/* ── Draggable circular camera bubble ── */}
+          {hasCamera && (
+            <div
+              onMouseDown={onCamMouseDown}
+              onTouchStart={onCamTouchStart}
+              style={{
+                position: 'absolute',
+                // position from bottom-right corner
+                right:  camPos.x,
+                bottom: camPos.y,
+                width:  `${CAM_SIZE}px`,
+                height: `${CAM_SIZE}px`,
+                borderRadius: '50%',
+                overflow: 'hidden',
+                border: '3px solid rgba(255,255,255,0.2)',
+                boxShadow: `
+                  0 0 0 1px rgba(0,0,0,0.4),
+                  0 8px 32px rgba(0,0,0,0.6),
+                  ${isRecording ? '0 0 20px rgba(231,76,60,0.5)' : ''}
+                `,
+                cursor: isDragging ? 'grabbing' : 'grab',
+                zIndex: 10,
+                userSelect: 'none',
+                animation: 'camPop 0.25s ease',
+                background: '#111',
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+              }}
+            >
+              <video
+                ref={cameraVideoRef}
+                autoPlay playsInline muted
+                style={{
+                  width: '100%', height: '100%',
+                  objectFit: 'cover',
+                  transform: 'scaleX(-1)', // mirror like a selfie cam
+                  pointerEvents: 'none',
+                }}
+              />
+
+              {/* Drag handle hint */}
+              <div style={{
+                position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)',
+                opacity: 0.35, pointerEvents: 'none',
+              }}>
+                <GripHorizontal style={{ width: '14px', height: '14px', color: '#fff' }} />
+              </div>
+
+              {/* Recording ring pulse */}
+              {isRecording && (
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  border: '2px solid rgba(231,76,60,0.7)',
+                  animation: 'pulse 1.2s infinite',
+                  pointerEvents: 'none',
+                }} />
+              )}
+            </div>
+          )}
 
           {/* Empty state */}
           {!isPreviewActive && !hasCamera && (
@@ -217,7 +348,7 @@ export default function ScreenRecordingPage() {
             </div>
           )}
 
-          {/* Recording indicator */}
+          {/* Recording indicator badge */}
           {isPreviewActive && (
             <div style={{
               position: 'absolute', top: 12, left: 12, zIndex: 10,
@@ -234,7 +365,7 @@ export default function ScreenRecordingPage() {
             </div>
           )}
 
-          {/* Countdown */}
+          {/* Countdown overlay */}
           {recorder.recordingState === 'countdown' && (
             <div style={{
               position: 'absolute', inset: 0, zIndex: 30,
@@ -252,7 +383,7 @@ export default function ScreenRecordingPage() {
             </div>
           )}
 
-          {/* Red border when recording */}
+          {/* Red border glow while recording */}
           {isRecording && (
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', boxShadow: 'inset 0 0 0 3px rgba(231,76,60,0.55)' }} />
           )}
@@ -272,7 +403,7 @@ export default function ScreenRecordingPage() {
           />
         </div>
 
-        {/* ── Bottom panels ── */}
+        {/* ── Bottom panels ─────────────────────────────────────────────────── */}
         <div style={{
           flexShrink: 0,
           display: 'flex',
@@ -281,7 +412,7 @@ export default function ScreenRecordingPage() {
           borderTop: '2px solid #111',
         }}>
 
-          {/* ─ Annotation panel ─ */}
+          {/* Annotation panel */}
           <div style={{ width: '190px', flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid #111' }}>
             <PanelHeader label="Annotation" />
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px', background: '#1a1a1a' }}>
@@ -299,7 +430,7 @@ export default function ScreenRecordingPage() {
             </div>
           </div>
 
-          {/* ─ Audio Mixer panel ─ */}
+          {/* Audio Mixer panel */}
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid #111' }}>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px', background: '#1a1a1a' }}>
               <AudioSettings
@@ -316,12 +447,11 @@ export default function ScreenRecordingPage() {
             </div>
           </div>
 
-          {/* ─ Controls panel ─ */}
+          {/* Controls panel */}
           <div style={{ width: '156px', flexShrink: 0, display: 'flex', flexDirection: 'column', background: '#1e1e1e' }}>
             <PanelHeader label="Controls" />
             <div style={{ flex: 1, padding: '8px', display: 'flex', flexDirection: 'column', gap: '5px', background: '#1a1a1a' }}>
 
-              {/* Start Recording */}
               {isIdle && (
                 <button onClick={handleStart} style={ctrlBtn('#c0392b', true)}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff', boxShadow: '0 0 6px rgba(255,255,255,0.8)', flexShrink: 0 }} />
@@ -329,7 +459,6 @@ export default function ScreenRecordingPage() {
                 </button>
               )}
 
-              {/* Stop */}
               {isActive && (
                 <button onClick={handleStop} style={ctrlBtn('#7a1f1f')}>
                   <Square style={{ width: '11px', height: '11px', flexShrink: 0 }} />
@@ -337,7 +466,6 @@ export default function ScreenRecordingPage() {
                 </button>
               )}
 
-              {/* Pause / Resume */}
               {isRecording && (
                 <button onClick={recorder.pauseRecording} style={ctrlBtn('#3a3a3a')}>
                   <Pause style={{ width: '11px', height: '11px', flexShrink: 0 }} />
@@ -351,7 +479,6 @@ export default function ScreenRecordingPage() {
                 </button>
               )}
 
-              {/* Discard */}
               {isActive && (
                 <button onClick={handleReset} style={ctrlBtn('#2a2a2a')}>
                   <RotateCcw style={{ width: '11px', height: '11px', flexShrink: 0 }} />
@@ -359,7 +486,6 @@ export default function ScreenRecordingPage() {
                 </button>
               )}
 
-              {/* Saved indicator */}
               {isStopped && (
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
@@ -371,7 +497,6 @@ export default function ScreenRecordingPage() {
                 </div>
               )}
 
-              {/* Error */}
               {recorder.error && (
                 <div style={{
                   padding: '6px 8px', borderRadius: '4px',
@@ -385,7 +510,7 @@ export default function ScreenRecordingPage() {
           </div>
         </div>
 
-        {/* ── Status bar ── */}
+        {/* ── Status bar ────────────────────────────────────────────────────── */}
         <div style={{
           height: '22px', flexShrink: 0,
           background: '#141414', borderTop: '1px solid #0e0e0e',
@@ -396,13 +521,16 @@ export default function ScreenRecordingPage() {
             ⏺ REC: {recorder.formatDuration(isActive ? recorder.duration : 0)}
           </span>
           <div style={{ display: 'flex', gap: '16px' }}>
-            <span style={{ fontSize: '10px', color: '#3a3a3a', fontFamily: 'monospace' }}>CPU: 0.3%</span>
-            <span style={{ fontSize: '10px', color: '#3a3a3a', fontFamily: 'monospace' }}>30.00 fps</span>
+            <span style={{ fontSize: '10px', color: '#3a3a3a', fontFamily: 'monospace' }}>
+              {hasCamera ? '📷 CAM ON' : 'CAM OFF'}
+            </span>
+            <span style={{ fontSize: '10px', color: '#3a3a3a', fontFamily: 'monospace' }}>
+              {micAudio ? '🎤 MIC ON' : 'MIC OFF'} · {systemAudio ? '🔊 SYS ON' : 'SYS OFF'}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Whiteboard full-screen modal */}
       {showWhiteboard && <WhiteboardModal onClose={() => setShowWhiteboard(false)} />}
     </>
   );

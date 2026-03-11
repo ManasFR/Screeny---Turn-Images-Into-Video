@@ -425,8 +425,15 @@ const AudioSettings = ({
   // Enumerate
   const enumerateDevices = useCallback(async () => {
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-        .then(s => s.getTracks().forEach(t => t.stop())).catch(() => {});
+      // Request both audio + video permissions so browsers reveal real device labels
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        .then(s => s.getTracks().forEach(t => t.stop()))
+        .catch(() => {
+          // If combined fails, try audio-only (camera may still enumerate with IDs)
+          return navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .then(s => s.getTracks().forEach(t => t.stop()))
+            .catch(() => {});
+        });
       const all = await navigator.mediaDevices.enumerateDevices();
       setMics(all.filter(d => d.kind === 'audioinput').map((d, i) => ({ deviceId: d.deviceId, label: d.label || `Microphone ${i + 1}` })));
       setCameras(all.filter(d => d.kind === 'videoinput').map((d, i) => ({ deviceId: d.deviceId, label: d.label || `Camera ${i + 1}` })));
@@ -598,10 +605,32 @@ const AudioSettings = ({
               </div>
             </div>
             <button
-              onClick={() => {
-                const next = cameraActive ? 'none' : (cameras[0]?.deviceId || 'none');
-                setLocalCamId(next);
-                onCameraDeviceChange(next);
+              onClick={async () => {
+                if (cameraActive) {
+                  // Turn OFF
+                  setLocalCamId('none');
+                  onCameraDeviceChange('none');
+                } else {
+                  // Turn ON — if cameras not yet enumerated, request permission first
+                  let camList = cameras;
+                  if (camList.length === 0) {
+                    try {
+                      const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                      s.getTracks().forEach(t => t.stop());
+                      const all = await navigator.mediaDevices.enumerateDevices();
+                      camList = all
+                        .filter(d => d.kind === 'videoinput')
+                        .map((d, i) => ({ deviceId: d.deviceId, label: d.label || `Camera ${i + 1}` }));
+                      setCameras(camList);
+                    } catch (err) {
+                      console.error('Camera permission denied:', err);
+                      return; // permission denied, do nothing
+                    }
+                  }
+                  const firstId = camList[0]?.deviceId || 'default';
+                  setLocalCamId(firstId);
+                  onCameraDeviceChange(firstId);
+                }
               }}
               disabled={disabled}
               style={{
