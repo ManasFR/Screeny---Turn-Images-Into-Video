@@ -12,6 +12,7 @@ export interface Slide {
   zoomPoints: ZoomPoint[];
   title: string;
   audio: string | null;
+  slideDuration?: number; // ms per zoom segment — overrides global zoomDuration
 }
 
 export interface PlanLimits {
@@ -23,6 +24,10 @@ export interface PlanLimits {
   noWatermark: boolean;
   planName?: string;
 }
+
+export type AspectRatio = '16:9' | '9:16' | '1:1' | '4:3';
+
+export type ExportFormat = 'webm' | 'gif' | '4k-webm';
 
 export interface VideoSettings {
   zoomLevel: number;
@@ -38,4 +43,11 @@ export interface VideoSettings {
   textBorderRadius: number;
   backgroundType: string;
   backgroundValue: string;
+  aspectRatio: AspectRatio;
+  exportFormat: ExportFormat;
+  webcamEnabled: boolean;
+  webcamX: number;        // normalized 0-1 position on canvas
+  webcamY: number;
+  webcamSize: number;     // radius in px (canvas coords)
+  webcamMirror: boolean;
 }

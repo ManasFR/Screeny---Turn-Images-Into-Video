@@ -12,12 +12,12 @@ export const useSlides = () => {
 
   const currentSlide = slides[currentSlideIndex] ?? null;
 
-  // Persist slide metadata (without images/audio) to localStorage
   useEffect(() => {
     const slidesWithoutMedia = slides.map(slide => ({
       id: slide.id,
       title: slide.title,
       zoomPoints: slide.zoomPoints,
+      slideDuration: slide.slideDuration,
     }));
     try {
       localStorage.setItem('duprunSlidesMetadata', JSON.stringify(slidesWithoutMedia));
@@ -26,7 +26,6 @@ export const useSlides = () => {
     }
   }, [slides]);
 
-  // Reset point index when slide changes
   const addSlide = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     files.forEach(file => {
@@ -39,6 +38,7 @@ export const useSlides = () => {
             zoomPoints: [],
             title: file.name,
             audio: null,
+            slideDuration: undefined, // uses global zoomDuration
           };
           setSlides(prev => [...prev, newSlide]);
         };
@@ -48,74 +48,68 @@ export const useSlides = () => {
     event.target.value = '';
   }, []);
 
-  const removeSlide = useCallback(
-    (slideId: number, currentIdx: number) => {
-      setSlides(prev => {
-        const newSlides = prev.filter(slide => slide.id !== slideId);
-        const newIndex =
-          currentIdx >= newSlides.length
-            ? Math.max(0, newSlides.length - 1)
-            : currentIdx;
-        setCurrentSlideIndex(newIndex);
-        return newSlides;
-      });
-      delete audioRefs.current[slideId];
-      delete imageRefs.current[slideId];
-    },
-    []
-  );
+  const removeSlide = useCallback((slideId: number, currentIdx: number) => {
+    setSlides(prev => {
+      const newSlides = prev.filter(slide => slide.id !== slideId);
+      const newIndex = currentIdx >= newSlides.length
+        ? Math.max(0, newSlides.length - 1)
+        : currentIdx;
+      setCurrentSlideIndex(newIndex);
+      return newSlides;
+    });
+    delete audioRefs.current[slideId];
+    delete imageRefs.current[slideId];
+  }, []);
 
-  const addSlideMusic = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>, slideId: number) => {
-      const file = event.target.files?.[0];
-      if (file && file.type.startsWith('audio/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setSlides(prev =>
-            prev.map(slide =>
-              slide.id === slideId
-                ? { ...slide, audio: e.target?.result as string }
-                : slide
-            )
-          );
-          if (!audioRefs.current[slideId]) {
-            audioRefs.current[slideId] = new Audio();
-          }
-          audioRefs.current[slideId].src = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
-      }
-      event.target.value = '';
-    },
-    []
-  );
+  const addSlideMusic = useCallback((event: React.ChangeEvent<HTMLInputElement>, slideId: number) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('audio/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSlides(prev =>
+          prev.map(slide =>
+            slide.id === slideId
+              ? { ...slide, audio: e.target?.result as string }
+              : slide
+          )
+        );
+        if (!audioRefs.current[slideId]) audioRefs.current[slideId] = new Audio();
+        audioRefs.current[slideId].src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+    event.target.value = '';
+  }, []);
 
-  const updatePointText = useCallback(
-    (pointId: number, newText: string, slideId: number) => {
-      setSlides(prev =>
-        prev.map(slide =>
-          slide.id === slideId
-            ? {
-                ...slide,
-                zoomPoints: slide.zoomPoints.map(point =>
-                  point.id === pointId ? { ...point, text: newText } : point
-                ),
-              }
-            : slide
-        )
-      );
-    },
-    []
-  );
+  // ── NEW: per-slide duration override ────────────────────────────
+  const updateSlideDuration = useCallback((slideId: number, duration: number | undefined) => {
+    setSlides(prev =>
+      prev.map(slide =>
+        slide.id === slideId ? { ...slide, slideDuration: duration } : slide
+      )
+    );
+  }, []);
 
-  const removeZoomPoint = useCallback((pointId: number, slideId: number) => {
+  const updatePointText = useCallback((pointId: number, newText: string, slideId: number) => {
     setSlides(prev =>
       prev.map(slide =>
         slide.id === slideId
           ? {
               ...slide,
-              zoomPoints: slide.zoomPoints.filter(point => point.id !== pointId),
+              zoomPoints: slide.zoomPoints.map(point =>
+                point.id === pointId ? { ...point, text: newText } : point
+              ),
             }
+          : slide
+      )
+    );
+  }, []);
+
+  const removeZoomPoint = useCallback((pointId: number, slideId: number) => {
+    setSlides(prev =>
+      prev.map(slide =>
+        slide.id === slideId
+          ? { ...slide, zoomPoints: slide.zoomPoints.filter(point => point.id !== pointId) }
           : slide
       )
     );
@@ -123,31 +117,20 @@ export const useSlides = () => {
 
   const clearAllPoints = useCallback((slideId: number) => {
     setSlides(prev =>
-      prev.map(slide =>
-        slide.id === slideId ? { ...slide, zoomPoints: [] } : slide
-      )
+      prev.map(slide => slide.id === slideId ? { ...slide, zoomPoints: [] } : slide)
     );
   }, []);
 
-  const navigateSlide = useCallback(
-    (direction: 'prev' | 'next') => {
-      setCurrentSlideIndex(prev => {
-        if (direction === 'prev' && prev > 0) return prev - 1;
-        if (direction === 'next' && prev < slides.length - 1) return prev + 1;
-        return prev;
-      });
-    },
-    [slides.length]
-  );
+  const navigateSlide = useCallback((direction: 'prev' | 'next') => {
+    setCurrentSlideIndex(prev => {
+      if (direction === 'prev' && prev > 0) return prev - 1;
+      if (direction === 'next' && prev < slides.length - 1) return prev + 1;
+      return prev;
+    });
+  }, [slides.length]);
 
   const addZoomPoint = useCallback((x: number, y: number, slideId: number) => {
-    const newPoint: ZoomPoint = {
-      id: Date.now(),
-      x,
-      y,
-      isDragging: false,
-      text: '',
-    };
+    const newPoint: ZoomPoint = { id: Date.now(), x, y, isDragging: false, text: '' };
     setSlides(prev =>
       prev.map(slide =>
         slide.id === slideId
@@ -184,11 +167,7 @@ export const useSlides = () => {
           ...slide,
           zoomPoints: slide.zoomPoints.map(point =>
             point.id === dragging.id
-              ? {
-                  ...point,
-                  x: Math.max(0, Math.min(1, normX)),
-                  y: Math.max(0, Math.min(1, normY)),
-                }
+              ? { ...point, x: Math.max(0, Math.min(1, normX)), y: Math.max(0, Math.min(1, normY)) }
               : point
           ),
         };
@@ -200,36 +179,20 @@ export const useSlides = () => {
     setSlides(prev =>
       prev.map(slide =>
         slide.id === slideId
-          ? {
-              ...slide,
-              zoomPoints: slide.zoomPoints.map(point => ({
-                ...point,
-                isDragging: false,
-              })),
-            }
+          ? { ...slide, zoomPoints: slide.zoomPoints.map(point => ({ ...point, isDragging: false })) }
           : slide
       )
     );
   }, []);
 
   return {
-    slides,
-    setSlides,
-    currentSlideIndex,
-    setCurrentSlideIndex,
-    currentSlide,
-    audioRefs,
-    imageRefs,
-    addSlide,
-    removeSlide,
-    addSlideMusic,
-    updatePointText,
-    removeZoomPoint,
-    clearAllPoints,
-    navigateSlide,
-    addZoomPoint,
-    startDragPoint,
-    moveDragPoint,
-    stopDragPoint,
+    slides, setSlides,
+    currentSlideIndex, setCurrentSlideIndex,
+    currentSlide, audioRefs, imageRefs,
+    addSlide, removeSlide, addSlideMusic,
+    updateSlideDuration,
+    updatePointText, removeZoomPoint, clearAllPoints,
+    navigateSlide, addZoomPoint,
+    startDragPoint, moveDragPoint, stopDragPoint,
   };
 };
