@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, AlertTriangle } from "lucide-react";
+import { Camera, Video, AlertTriangle } from "lucide-react";
 import { useSSScreenshot } from "@/hooks/useSSScreenshot";
 import SSUrlInput from "./_components/SSUrlInput";
 import SSSizeSelector from "./_components/SSSizeSelector";
@@ -8,6 +8,8 @@ import SSPreviewFrame from "./_components/SSPreviewFrame";
 import SSScreenshotResult from "./_components/SSScreenshotResult";
 import SSCapturePanel from "./_components/SSCapturePanel";
 import SSProgressBar from "./_components/SSProgressBar";
+import Link from "next/link"
+
 
 export default function ScreenshotPage() {
   const {
@@ -31,6 +33,23 @@ export default function ScreenshotPage() {
         </div>
         <div className="w-px h-4 bg-[#2a2a2a]"/>
         <span className="text-xs text-[#666]">Capture any website at any viewport</span>
+
+        <div className="ml-auto flex items-center gap-1">
+          <Link
+            href="/dashboard/duprun"
+            className="flex items-center gap-1.5 px-3 h-7 rounded-md text-xs text-[#888] hover:text-[#eee] hover:bg-[#1f1f1f] transition-colors"
+          >
+            <Camera className="w-3 h-3" />
+            Screeny
+          </Link>
+          <Link
+            href="/dashboard/screenrecording"
+            className="flex items-center gap-1.5 px-3 h-7 rounded-md text-xs text-[#888] hover:text-[#eee] hover:bg-[#1f1f1f] transition-colors"
+          >
+            <Video className="w-3 h-3" />
+            Screen Record
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col h-[calc(100vh-56px)]">

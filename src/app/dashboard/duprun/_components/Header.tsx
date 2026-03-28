@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Video, Sparkles } from 'lucide-react';
+import { Video, Sparkles,Camera } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 const Header = () => {
@@ -27,38 +27,57 @@ const Header = () => {
         </Link>
 
         {/* Right side */}
-        <div className="flex items-center gap-4">
+<div className="flex items-center gap-4">
 
-          {/* Plans link */}
-          <Link
-            href="/plans"
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200 group"
-          >
-            <Sparkles className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
-            Plans
-          </Link>
+  {/* Nav links */}
+  <Link
+    href="/dashboard/screenshot"
+    className="flex items-center gap-1.5 text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200 group"
+  >
+    <Camera className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300 transition-colors" />
+    Screenshot
+  </Link>
 
-          {/* User pill */}
-          {session?.user && (
-            <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.07] rounded-xl px-3.5 py-2 hover:bg-white/[0.07] transition-all duration-200 cursor-default">
-              {session.user.image ? (
-                <img
-                  src={session.user.image}
-                  alt="avatar"
-                  className="w-6 h-6 rounded-full object-cover ring-1 ring-purple-500/40"
-                />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                  {getFirstWord()[0]?.toUpperCase()}
-                </div>
-              )}
-              <span className="text-sm font-medium text-slate-200 capitalize">
-                {getFirstWord()}
-              </span>
-            </div>
-          )}
+  <Link
+    href="/dashboard/screenrecording"
+    className="flex items-center gap-1.5 text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200 group"
+  >
+    <Video className="w-4 h-4 text-red-400 group-hover:text-red-300 transition-colors" />
+    Screen Record
+  </Link>
 
+  <div className="w-px h-4 bg-white/[0.08]" />
+
+  {/* Plans link */}
+  <Link
+    href="/plans"
+    className="flex items-center gap-1.5 text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200 group"
+  >
+    <Sparkles className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
+    Plans
+  </Link>
+
+  {/* User pill */}
+  {session?.user && (
+    <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.07] rounded-xl px-3.5 py-2 hover:bg-white/[0.07] transition-all duration-200 cursor-default">
+      {session.user.image ? (
+        <img
+          src={session.user.image}
+          alt="avatar"
+          className="w-6 h-6 rounded-full object-cover ring-1 ring-purple-500/40"
+        />
+      ) : (
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+          {getFirstWord()[0]?.toUpperCase()}
         </div>
+      )}
+      <span className="text-sm font-medium text-slate-200 capitalize">
+        {getFirstWord()}
+      </span>
+    </div>
+  )}
+
+</div>
       </div>
     </header>
   );

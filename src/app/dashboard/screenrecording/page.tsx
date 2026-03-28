@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  Video, ChevronLeft, PenLine, Square, Pause, Play,
+  Video, ChevronLeft, MonitorPlay, Camera, PenLine, Square, Pause, Play,
   RotateCcw, Download, Monitor, GripHorizontal,
 } from 'lucide-react';
 import { useScreenRecorder } from '@/hooks/useScreenRecorder';
@@ -189,25 +189,46 @@ export default function ScreenRecordingPage() {
           padding: '0 24px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <Link href="/dashboard/duprun" style={{ color: '#a1a1aa', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>
-              <ChevronLeft style={{ width: '20px', height: '20px' }} />
-            </Link>
-            <div style={{ width: '1px', height: '24px', background: '#3f3f46' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: 'linear-gradient(135deg,#ef4444,#b91c1c)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 12px rgba(239,68,68,0.4)',
-              }}>
-                <Video style={{ width: '16px', height: '16px', color: '#ffffff' }} />
-              </div>
-              <span style={{ fontSize: '16px', fontWeight: 700, color: '#f4f4f5', letterSpacing: '-0.02em' }}>
-                Studio Recorder
-              </span>
-            </div>
-          </div>
+<div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+  <Link href="/dashboard/duprun" style={{ color: '#a1a1aa', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>
+    <ChevronLeft style={{ width: '20px', height: '20px' }} />
+  </Link>
+  <div style={{ width: '1px', height: '24px', background: '#3f3f46' }} />
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div style={{
+      width: '32px', height: '32px', borderRadius: '8px',
+      background: 'linear-gradient(135deg,#ef4444,#b91c1c)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: '0 0 12px rgba(239,68,68,0.4)',
+    }}>
+      <Video style={{ width: '16px', height: '16px', color: '#ffffff' }} />
+    </div>
+    <span style={{ fontSize: '16px', fontWeight: 700, color: '#f4f4f5', letterSpacing: '-0.02em' }}>
+      Studio Recorder
+    </span>
+  </div>
+
+  <div style={{ width: '1px', height: '24px', background: '#3f3f46' }} />
+
+  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+    <Link href="/dashboard/screenshot" style={{
+      display: 'flex', alignItems: 'center', gap: '6px',
+      padding: '4px 12px', borderRadius: '6px', fontSize: '12px',
+      color: '#a1a1aa', transition: 'all 0.2s', textDecoration: 'none',
+    }}>
+      <Camera style={{ width: '14px', height: '14px' }} />
+      Screenshot
+    </Link>
+    <Link href="/dashboard/duprun" style={{
+      display: 'flex', alignItems: 'center', gap: '6px',
+      padding: '4px 12px', borderRadius: '6px', fontSize: '12px',
+      color: '#a1a1aa', transition: 'all 0.2s', textDecoration: 'none',
+    }}>
+      <MonitorPlay style={{ width: '14px', height: '14px' }} />
+      Duprun
+    </Link>
+  </div>
+</div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* Live status indicator */}
