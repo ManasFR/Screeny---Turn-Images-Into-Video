@@ -7,9 +7,9 @@ declare global {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   if (!global.__ssShareStore) {
     return NextResponse.json({ error: "Share store not initialized" }, { status: 500 });
