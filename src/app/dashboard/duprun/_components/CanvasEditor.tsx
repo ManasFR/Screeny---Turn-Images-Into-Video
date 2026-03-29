@@ -20,7 +20,7 @@ const TOOLS = [
 const QUICK_COLORS = ['#FFFFFF', '#EF4444', '#FACC15', '#22C55E', '#3B82F6', '#A855F7', '#F97316'];
 
 interface CanvasEditorProps {
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
   slides: Slide[];
   currentSlide: Slide | null;
   currentSlideIndex: number;
