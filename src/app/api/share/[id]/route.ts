@@ -20,7 +20,7 @@ export async function GET(
     return NextResponse.json({ error: "Screenshot not found or expired" }, { status: 404 });
   }
 
-  return new NextResponse(entry.buffer, {
+  return new NextResponse(entry.buffer as unknown as BodyInit, {
     status: 200,
     headers: {
       "Content-Type": "image/png",
