@@ -6,7 +6,7 @@ import { SSCropRect } from "@/hooks/useSSAnnotation";
 import { SSAnnotationCanvasRef } from "./SSAnnotationCanvas";
 
 interface SSExportShareProps {
-  canvasRef: RefObject<SSAnnotationCanvasRef>;
+  canvasRef: React.RefObject<SSAnnotationCanvasRef | null>;
   cropRect: SSCropRect | null;
   websiteUrl: string;
   deviceLabel: string;
