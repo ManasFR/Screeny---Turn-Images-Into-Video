@@ -91,7 +91,7 @@ const ChannelStrip = ({
       const analyser = analyserRef.current;
       if (analyser) {
         if (dataRef.current.length !== analyser.frequencyBinCount) {
-          dataRef.current = new Uint8Array(analyser.frequencyBinCount);
+          dataRef.current = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
         }
         analyser.getByteTimeDomainData(dataRef.current);
         let sumSq = 0;
