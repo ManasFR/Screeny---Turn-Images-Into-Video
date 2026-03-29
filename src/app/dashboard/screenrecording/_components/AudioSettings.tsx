@@ -1,5 +1,5 @@
 'use client';
-
+import React from 'react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Mic, MicOff, Monitor, Camera, CameraOff, ChevronDown, Volume2, VolumeX, Settings2 } from 'lucide-react';
 
@@ -32,8 +32,8 @@ const getSegColor = (ratio: number): string => {
 interface ChannelStripProps {
   label: string;
   subLabel: string;
-  icon: any;
-  iconOff: any;
+  icon: React.ElementType;
+  iconOff: React.ElementType;
   active: boolean;
   onToggle: () => void;
   devices: DeviceInfo[];
@@ -496,7 +496,7 @@ const AudioSettings = ({
   const requestSysPreview = useCallback(async () => {
     stopSys();
     try {
-      const stream = await (navigator.mediaDevices as any).getDisplayMedia({ video: true, audio: true });
+      const stream = await (navigator.mediaDevices as MediaDevices & { getDisplayMedia: (c: object) => Promise<MediaStream> }).getDisplayMedia({ video: true, audio: true });
       const audioTracks = stream.getAudioTracks();
       if (!audioTracks.length) { stream.getTracks().forEach((t: MediaStreamTrack) => t.stop()); return; }
       stream.getVideoTracks().forEach((t: MediaStreamTrack) => t.stop());

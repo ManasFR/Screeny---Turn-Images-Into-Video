@@ -310,7 +310,7 @@ export const useCanvasAnimation = ({
           ctx.globalAlpha = textOpacity;
           ctx.fillStyle = textBgColor;
           ctx.beginPath();
-          (ctx as any).roundRect(W / 2 - tw / 2 - textPadding, H - 70, tw + textPadding * 2, 40, textBorderRadius);
+          (ctx as CanvasRenderingContext2D & { roundRect: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect(W / 2 - tw / 2 - textPadding, H - 70, tw + textPadding * 2, 40, textBorderRadius);
           ctx.fill();
         }
         ctx.globalAlpha = textOpacity;

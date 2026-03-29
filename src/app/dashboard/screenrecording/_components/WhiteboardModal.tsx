@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback, MouseEvent } from 'react';
+import React, { useRef, useEffect, useState, useCallback, MouseEvent } from 'react';
 import {
   X, Pen, Square, Circle, Minus, ArrowUpRight,
   Type, Eraser, Trash2, Download, RotateCcw, Redo,
@@ -15,7 +15,7 @@ interface WBObj {
   color: string; size: number;
 }
 
-const TOOLS: { type: WBTool; icon: any; label: string }[] = [
+const TOOLS: { type: WBTool; icon: React.ElementType; label: string }[] = [
   { type: 'pen',    icon: Pen,          label: 'Pen' },
   { type: 'rect',   icon: Square,       label: 'Rect' },
   { type: 'circle', icon: Circle,       label: 'Circle' },

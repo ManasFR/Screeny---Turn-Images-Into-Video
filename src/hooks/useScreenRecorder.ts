@@ -184,8 +184,8 @@ export const useScreenRecorder = () => {
       setRecordingState('recording');
       startTimer();
 
-    } catch (err: any) {
-      const msg = err?.message || '';
+    } catch (err: unknown) {
+      const msg = (err as Error)?.message || '';
       if (!msg.includes('Permission denied') && !msg.includes('cancelled') && !msg.includes('abort')) {
         setError(msg || 'Could not start recording');
       }
