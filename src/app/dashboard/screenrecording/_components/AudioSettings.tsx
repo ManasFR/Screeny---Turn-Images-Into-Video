@@ -67,7 +67,7 @@ const ChannelStrip = ({
   const [peak, setPeak] = useState(0);
   const peakTimerRef = useRef<NodeJS.Timeout | null>(null);
   const rafRef = useRef<number | null>(null);
-  const dataRef = useRef<Uint8Array>(new Uint8Array(256));
+const dataRef = useRef<Uint8Array<ArrayBuffer>>(new Uint8Array(new ArrayBuffer(256)));
   const levelRef = useRef(0);
 
   const selected = devices.find(d => d.deviceId === selectedId) || devices[0];
@@ -93,7 +93,7 @@ const ChannelStrip = ({
         if (dataRef.current.length !== analyser.frequencyBinCount) {
           dataRef.current = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
         }
-        analyser.getByteTimeDomainData(dataRef.current);
+        analyser.getByteTimeDomainData(dataRef.current as Uint8Array<ArrayBuffer>);
         let sumSq = 0;
         for (let i = 0; i < dataRef.current.length; i++) {
           const n = (dataRef.current[i] - 128) / 128;
