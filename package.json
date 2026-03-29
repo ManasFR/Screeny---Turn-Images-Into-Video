@@ -33,6 +33,7 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
+    "@types/gif.js": "^0.2.5",
     "@types/node": "^20",
     "@types/pg": "^8.16.0",
     "@types/react": "^19",
